@@ -39,17 +39,17 @@
 ## Phase 3: Core Features
 
 ### Live Cursors
-- [ ] Cursor position tracking
-- [ ] Cursor broadcast optimization (throttling)
+- [x] Cursor position tracking
+- [x] Cursor broadcast optimization (throttling)
 - [ ] Cursor labels (user name display)
 - [ ] Client-side cursor smoothing
 - [ ] Selection highlighting
 
 ### Threaded Comments
-- [ ] Comment schema with threading (parent_id)
-- [ ] Element anchoring (anchor_id, position)
+- [x] Comment schema with threading (parent_id)
+- [x] Element anchoring (anchor_id, position)
 - [ ] Real-time comment sync
-- [ ] Comment resolution (mark as resolved)
+- [x] Comment resolution (mark as resolved)
 - [ ] Reactions (emoji)
 
 ### Notifications
@@ -157,14 +157,15 @@
 
 ### Deployment
 - [ ] Fly.io configuration
-- [ ] CI/CD pipeline
+- [x] CI pipeline (GitHub Actions - tests, format)
+- [ ] CD pipeline (staging/production deploy)
 - [ ] Monitoring (Telemetry)
 - [ ] Error tracking
 - [ ] Automated backups
 
 ---
 
-## Current Sprint: Real-Time Foundation
+## Current Sprint: Core Features
 
 ### Completed ✅
 1. **UserSocket** - WebSocket authentication via Phoenix tokens
@@ -173,10 +174,13 @@
 4. **Room Schema** - Ecto schema with types, config, and metadata
 5. **Room CRUD** - Full CRUD operations with slug generation
 6. **Room Authorization** - Capacity checks and access control
+7. **Cursor Throttling** - Rate-limited cursor broadcasts at ~60fps via Agent GenServer
+8. **Comment Schema** - Threaded comments with anchoring, resolution, and cascade delete
+9. **CI Pipeline** - GitHub Actions for tests and format checking on PRs
 
 ### Up Next
-- Cursor tracking optimization (throttling)
-- Comment system schema
+- Cursor labels (user name display)
+- Real-time comment sync (channel integration)
 - Room state persistence
 
 ---

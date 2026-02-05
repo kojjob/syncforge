@@ -10,11 +10,12 @@ defmodule SyncforgeWeb.LandingLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket,
-      theme: "system",
-      active_tab: "presence",
-      email: ""
-    )}
+    {:ok,
+     assign(socket,
+       theme: "system",
+       active_tab: "presence",
+       email: ""
+     )}
   end
 
   @impl true
@@ -1045,16 +1046,23 @@ defmodule SyncforgeWeb.LandingLive do
           50% { opacity: 0.7; transform: scale(1.1); }
         }
       </style>
-
-      <!-- Navigation -->
+      
+    <!-- Navigation -->
       <nav class="nav">
         <div class="nav-inner">
           <a href="/" class="logo">
             <div class="logo-mark">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                <path d="M2 17l10 5 10-5"/>
-                <path d="M2 12l10 5 10-5"/>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                stroke-width="2.5"
+              >
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
               </svg>
             </div>
             SyncForge
@@ -1075,9 +1083,16 @@ defmodule SyncforgeWeb.LandingLive do
                 phx-value-theme="light"
                 title="Light mode"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="5"/>
-                  <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="5" />
+                  <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
                 </svg>
               </button>
               <button
@@ -1086,9 +1101,16 @@ defmodule SyncforgeWeb.LandingLive do
                 phx-value-theme="system"
                 title="System preference"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="2" y="3" width="20" height="14" rx="2"/>
-                  <path d="M8 21h8m-4-4v4"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="2" y="3" width="20" height="14" rx="2" />
+                  <path d="M8 21h8m-4-4v4" />
                 </svg>
               </button>
               <button
@@ -1097,8 +1119,15 @@ defmodule SyncforgeWeb.LandingLive do
                 phx-value-theme="dark"
                 title="Dark mode"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                 </svg>
               </button>
             </div>
@@ -1108,17 +1137,19 @@ defmodule SyncforgeWeb.LandingLive do
           </div>
         </div>
       </nav>
-
-      <!-- Hero Section -->
+      
+    <!-- Hero Section -->
       <section class="hero">
         <div class="hero-content">
           <div class="hero-badge">
             <span class="hero-badge-dot"></span>
-            <span class="label" style="color: var(--text-primary); letter-spacing: 0.05em;">Now in Public Beta</span>
+            <span class="label" style="color: var(--text-primary); letter-spacing: 0.05em;">
+              Now in Public Beta
+            </span>
           </div>
 
           <h1 class="display-xl hero-title">
-            Collaboration<br/><em>made seamless</em>
+            Collaboration<br /><em>made seamless</em>
           </h1>
 
           <p class="body-lg hero-subtitle">
@@ -1128,8 +1159,15 @@ defmodule SyncforgeWeb.LandingLive do
           <div class="hero-actions">
             <a href="/signup" class="btn btn-primary">
               Start building free
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M5 12h14m-7-7l7 7-7 7"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M5 12h14m-7-7l7 7-7 7" />
               </svg>
             </a>
             <a href="/docs" class="btn btn-secondary">
@@ -1137,8 +1175,8 @@ defmodule SyncforgeWeb.LandingLive do
             </a>
           </div>
         </div>
-
-        <!-- Interactive Demo -->
+        
+    <!-- Interactive Demo -->
         <div class="hero-demo">
           <div class="demo-header">
             <span class="demo-title">design-review.fig</span>
@@ -1152,7 +1190,10 @@ defmodule SyncforgeWeb.LandingLive do
               <div class="presence-avatar" style="background: #34D399; position: relative;">
                 <span>AM</span>
               </div>
-              <div class="presence-avatar" style="background: var(--bg-secondary); color: var(--text-secondary);">
+              <div
+                class="presence-avatar"
+                style="background: var(--bg-secondary); color: var(--text-secondary);"
+              >
                 +3
               </div>
             </div>
@@ -1161,7 +1202,9 @@ defmodule SyncforgeWeb.LandingLive do
           <div class="demo-content">
             <div class="demo-text">
               <p style="margin: 0 0 1rem 0;">// Real-time collaboration in action</p>
-              <p style="margin: 0 0 0.5rem 0;">The hero section needs more <span class="highlight">visual impact</span>.</p>
+              <p style="margin: 0 0 0.5rem 0;">
+                The hero section needs more <span class="highlight">visual impact</span>.
+              </p>
               <p style="margin: 0 0 0.5rem 0;">Let's add animated presence indicators and</p>
               <p style="margin: 0;">make the CTA buttons more prominent.</p>
 
@@ -1169,11 +1212,13 @@ defmodule SyncforgeWeb.LandingLive do
                 <div class="typing-dot"></div>
                 <div class="typing-dot"></div>
                 <div class="typing-dot"></div>
-                <span style="font-size: 0.75rem; color: var(--text-tertiary); margin-left: 0.5rem;">Sarah is typing...</span>
+                <span style="font-size: 0.75rem; color: var(--text-tertiary); margin-left: 0.5rem;">
+                  Sarah is typing...
+                </span>
               </div>
             </div>
-
-            <!-- Animated Cursors -->
+            
+    <!-- Animated Cursors -->
             <div class="cursor cursor-1">
               <div class="cursor-pointer"></div>
               <div class="cursor-label">Sarah K.</div>
@@ -1189,8 +1234,8 @@ defmodule SyncforgeWeb.LandingLive do
           </div>
         </div>
       </section>
-
-      <!-- Features Section -->
+      
+    <!-- Features Section -->
       <section id="features" class="features">
         <div class="section-header">
           <span class="label">Features</span>
@@ -1201,9 +1246,16 @@ defmodule SyncforgeWeb.LandingLive do
         <div class="features-grid">
           <div class="feature-card">
             <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="3"/>
-                <circle cx="12" cy="12" r="8" stroke-dasharray="4 2"/>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <circle cx="12" cy="12" r="8" stroke-dasharray="4 2" />
               </svg>
             </div>
             <h3 class="feature-title">Presence Tracking</h3>
@@ -1224,9 +1276,16 @@ defmodule SyncforgeWeb.LandingLive do
 
           <div class="feature-card">
             <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
-                <path d="M13 13l6 6"/>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
+                <path d="M13 13l6 6" />
               </svg>
             </div>
             <h3 class="feature-title">Live Cursors</h3>
@@ -1247,8 +1306,15 @@ defmodule SyncforgeWeb.LandingLive do
 
           <div class="feature-card">
             <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
             </div>
             <h3 class="feature-title">Threaded Comments</h3>
@@ -1269,9 +1335,16 @@ defmodule SyncforgeWeb.LandingLive do
 
           <div class="feature-card">
             <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
             </div>
             <h3 class="feature-title">Notifications</h3>
@@ -1291,8 +1364,8 @@ defmodule SyncforgeWeb.LandingLive do
           </div>
         </div>
       </section>
-
-      <!-- Code Section -->
+      
+    <!-- Code Section -->
       <section id="developers" class="code-section">
         <div class="code-inner">
           <div class="section-header">
@@ -1337,8 +1410,8 @@ defmodule SyncforgeWeb.LandingLive do
           </div>
         </div>
       </section>
-
-      <!-- Pricing Section -->
+      
+    <!-- Pricing Section -->
       <section id="pricing" class="pricing">
         <div class="section-header">
           <span class="label">Pricing</span>
@@ -1356,26 +1429,54 @@ defmodule SyncforgeWeb.LandingLive do
             <p class="pricing-desc">Perfect for trying things out</p>
             <ul class="pricing-features">
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 100 monthly active users
               </li>
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 5 rooms
               </li>
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Presence & Cursors
               </li>
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Community support
               </li>
@@ -1392,26 +1493,54 @@ defmodule SyncforgeWeb.LandingLive do
             <p class="pricing-desc">For small teams getting started</p>
             <ul class="pricing-features">
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 1,000 monthly active users
               </li>
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 10 rooms
               </li>
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Everything in Free
               </li>
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Email support
               </li>
@@ -1428,26 +1557,54 @@ defmodule SyncforgeWeb.LandingLive do
             <p class="pricing-desc">For growing products</p>
             <ul class="pricing-features">
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 10,000 monthly active users
               </li>
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 100 rooms
               </li>
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Comments & Notifications
               </li>
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Priority support
               </li>
@@ -1464,26 +1621,54 @@ defmodule SyncforgeWeb.LandingLive do
             <p class="pricing-desc">For scale and custom needs</p>
             <ul class="pricing-features">
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 50,000 monthly active users
               </li>
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Unlimited rooms
               </li>
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Voice rooms & Analytics
               </li>
               <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Dedicated support
               </li>
@@ -1492,8 +1677,8 @@ defmodule SyncforgeWeb.LandingLive do
           </div>
         </div>
       </section>
-
-      <!-- CTA Section -->
+      
+    <!-- CTA Section -->
       <section class="cta-section">
         <div class="cta-inner">
           <h2 class="display-md cta-title">Ready to build?</h2>
@@ -1513,8 +1698,8 @@ defmodule SyncforgeWeb.LandingLive do
           </form>
         </div>
       </section>
-
-      <!-- Footer -->
+      
+    <!-- Footer -->
       <footer class="footer">
         <div class="footer-inner">
           <p class="footer-copy">© 2026 SyncForge. Built with Elixir & Phoenix.</p>

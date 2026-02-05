@@ -43,7 +43,11 @@ defmodule Syncforge.Rooms.Room do
   schema "rooms" do
     field :name, :string
     field :slug, :string
-    field :type, Ecto.Enum, values: [:general, :document, :whiteboard, :canvas, :video], default: :general
+
+    field :type, Ecto.Enum,
+      values: [:general, :document, :whiteboard, :canvas, :video],
+      default: :general
+
     field :description, :string
     field :max_participants, :integer, default: 100
     field :is_public, :boolean, default: true
@@ -69,7 +73,16 @@ defmodule Syncforge.Rooms.Room do
   """
   def create_changeset(room, attrs) do
     room
-    |> cast(attrs, [:name, :slug, :type, :description, :max_participants, :is_public, :config, :metadata])
+    |> cast(attrs, [
+      :name,
+      :slug,
+      :type,
+      :description,
+      :max_participants,
+      :is_public,
+      :config,
+      :metadata
+    ])
     |> validate_required([:name])
     |> generate_slug_if_missing()
     |> validate_length(:name, min: 1, max: 255)

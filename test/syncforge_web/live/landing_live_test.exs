@@ -44,16 +44,18 @@ defmodule SyncforgeWeb.LandingLiveTest do
       assert render(view) =~ ~s(data-theme="system")
 
       # Toggle to dark
-      html = view
-      |> element(~s(button[phx-click="toggle_theme"][phx-value-theme="dark"]))
-      |> render_click()
+      html =
+        view
+        |> element(~s(button[phx-click="toggle_theme"][phx-value-theme="dark"]))
+        |> render_click()
 
       assert html =~ ~s(data-theme="dark")
 
       # Toggle to light
-      html = view
-      |> element(~s(button[phx-click="toggle_theme"][phx-value-theme="light"]))
-      |> render_click()
+      html =
+        view
+        |> element(~s(button[phx-click="toggle_theme"][phx-value-theme="light"]))
+        |> render_click()
 
       assert html =~ ~s(data-theme="light")
     end
@@ -65,16 +67,18 @@ defmodule SyncforgeWeb.LandingLiveTest do
       assert html =~ "Initialize SyncForge"
 
       # Switch to cursors tab
-      html = view
-      |> element(~s(button[phx-click="set_tab"][phx-value-tab="cursors"]))
-      |> render_click()
+      html =
+        view
+        |> element(~s(button[phx-click="set_tab"][phx-value-tab="cursors"]))
+        |> render_click()
 
       assert html =~ "Track and display live cursors"
 
       # Switch to comments tab
-      html = view
-      |> element(~s(button[phx-click="set_tab"][phx-value-tab="comments"]))
-      |> render_click()
+      html =
+        view
+        |> element(~s(button[phx-click="set_tab"][phx-value-tab="comments"]))
+        |> render_click()
 
       assert html =~ "Add threaded comments"
     end
