@@ -8,12 +8,8 @@ defmodule SyncforgeWeb.CoreComponents do
   with doc strings and declarative assigns. You may customize and style
   them in any way you want, based on your application growth and needs.
 
-  The foundation for styling is Tailwind CSS, a utility-first CSS framework,
-  augmented with daisyUI, a Tailwind CSS plugin that provides UI components
-  and themes. Here are useful references:
-
-    * [daisyUI](https://daisyui.com/docs/intro/) - a good place to get
-      started and see the available components.
+  The foundation for styling is Tailwind CSS, a utility-first CSS framework.
+  Here are useful references:
 
     * [Tailwind CSS](https://tailwindcss.com) - the foundational framework
       we build on. You will use it for layout, sizing, flexbox, grid, and
@@ -56,21 +52,20 @@ defmodule SyncforgeWeb.CoreComponents do
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class="toast toast-top toast-end z-50"
+      class="fixed top-4 right-4 z-50"
       {@rest}
     >
       <div class={[
-        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
-        @kind == :info && "alert-info",
-        @kind == :error && "alert-error"
+        "w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap p-4 rounded-lg shadow-lg border flex items-start gap-3",
+        @kind == :info && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200",
+        @kind == :error && "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200"
       ]}>
         <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
         <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
-        <div>
+        <div class="flex-1">
           <p :if={@title} class="font-semibold">{@title}</p>
           <p>{msg}</p>
         </div>
-        <div class="flex-1" />
         <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
           <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
         </button>
@@ -94,11 +89,14 @@ defmodule SyncforgeWeb.CoreComponents do
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
-    variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
+    variants = %{
+      "primary" => "bg-indigo-600 hover:bg-indigo-700 text-white",
+      nil => "bg-indigo-100 dark:bg-indigo-900/30 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300"
+    }
 
     assigns =
       assign_new(assigns, :class, fn ->
-        ["btn", Map.fetch!(variants, assigns[:variant])]
+        ["inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-sm transition-colors", Map.fetch!(variants, assigns[:variant])]
       end)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
@@ -205,8 +203,8 @@ defmodule SyncforgeWeb.CoreComponents do
       end)
 
     ~H"""
-    <div class="fieldset mb-2">
-      <label>
+    <div class="mb-2">
+      <label class="flex items-center gap-2 cursor-pointer">
         <input
           type="hidden"
           name={@name}
@@ -214,17 +212,16 @@ defmodule SyncforgeWeb.CoreComponents do
           disabled={@rest[:disabled]}
           form={@rest[:form]}
         />
-        <span class="label">
-          <input
-            type="checkbox"
-            id={@id}
-            name={@name}
-            value="true"
-            checked={@checked}
-            class={@class || "checkbox checkbox-sm"}
-            {@rest}
-          />{@label}
-        </span>
+        <input
+          type="checkbox"
+          id={@id}
+          name={@name}
+          value="true"
+          checked={@checked}
+          class={@class || "h-4 w-4 rounded border-zinc-300 dark:border-zinc-600 text-indigo-600 focus:ring-indigo-500"}
+          {@rest}
+        />
+        <span class="text-sm text-zinc-700 dark:text-zinc-300">{@label}</span>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
@@ -233,13 +230,13 @@ defmodule SyncforgeWeb.CoreComponents do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div class="fieldset mb-2">
-      <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+    <div class="mb-2">
+      <label class="block">
+        <span :if={@label} class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">{@label}</span>
         <select
           id={@id}
           name={@name}
-          class={[@class || "w-full select", @errors != [] && (@error_class || "select-error")]}
+          class={[@class || "w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500", @errors != [] && (@error_class || "border-red-500 focus:ring-red-500")]}
           multiple={@multiple}
           {@rest}
         >
@@ -254,15 +251,15 @@ defmodule SyncforgeWeb.CoreComponents do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div class="fieldset mb-2">
-      <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+    <div class="mb-2">
+      <label class="block">
+        <span :if={@label} class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">{@label}</span>
         <textarea
           id={@id}
           name={@name}
           class={[
-            @class || "w-full textarea",
-            @errors != [] && (@error_class || "textarea-error")
+            @class || "w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500",
+            @errors != [] && (@error_class || "border-red-500 focus:ring-red-500")
           ]}
           {@rest}
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
@@ -275,17 +272,17 @@ defmodule SyncforgeWeb.CoreComponents do
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div class="fieldset mb-2">
-      <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+    <div class="mb-2">
+      <label class="block">
+        <span :if={@label} class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">{@label}</span>
         <input
           type={@type}
           name={@name}
           id={@id}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
           class={[
-            @class || "w-full input",
-            @errors != [] && (@error_class || "input-error")
+            @class || "w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500",
+            @errors != [] && (@error_class || "border-red-500 focus:ring-red-500")
           ]}
           {@rest}
         />
@@ -298,7 +295,7 @@ defmodule SyncforgeWeb.CoreComponents do
   # Helper used by inputs to generate form errors
   defp error(assigns) do
     ~H"""
-    <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
+    <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600 dark:text-red-400">
       <.icon name="hero-exclamation-circle" class="size-5" />
       {render_slot(@inner_block)}
     </p>
@@ -316,10 +313,10 @@ defmodule SyncforgeWeb.CoreComponents do
     ~H"""
     <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
       <div>
-        <h1 class="text-lg font-semibold leading-8">
+        <h1 class="text-lg font-semibold leading-8 text-zinc-900 dark:text-zinc-100">
           {render_slot(@inner_block)}
         </h1>
-        <p :if={@subtitle != []} class="text-sm text-base-content/70">
+        <p :if={@subtitle != []} class="text-sm text-zinc-600 dark:text-zinc-400">
           {render_slot(@subtitle)}
         </p>
       </div>
@@ -360,25 +357,25 @@ defmodule SyncforgeWeb.CoreComponents do
       end
 
     ~H"""
-    <table class="table table-zebra">
-      <thead>
+    <table class="w-full text-sm text-left text-zinc-900 dark:text-zinc-100">
+      <thead class="text-xs uppercase bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
         <tr>
-          <th :for={col <- @col}>{col[:label]}</th>
-          <th :if={@action != []}>
+          <th :for={col <- @col} class="px-4 py-3">{col[:label]}</th>
+          <th :if={@action != []} class="px-4 py-3">
             <span class="sr-only">{gettext("Actions")}</span>
           </th>
         </tr>
       </thead>
       <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
-        <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
+        <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="border-b border-zinc-200 dark:border-zinc-700 odd:bg-white even:bg-zinc-50 dark:odd:bg-zinc-900 dark:even:bg-zinc-800/50">
           <td
             :for={col <- @col}
             phx-click={@row_click && @row_click.(row)}
-            class={@row_click && "hover:cursor-pointer"}
+            class={["px-4 py-3", @row_click && "hover:cursor-pointer"]}
           >
             {render_slot(col, @row_item.(row))}
           </td>
-          <td :if={@action != []} class="w-0 font-semibold">
+          <td :if={@action != []} class="w-0 px-4 py-3 font-semibold">
             <div class="flex gap-4">
               <%= for action <- @action do %>
                 {render_slot(action, @row_item.(row))}
@@ -407,11 +404,11 @@ defmodule SyncforgeWeb.CoreComponents do
 
   def list(assigns) do
     ~H"""
-    <ul class="list">
-      <li :for={item <- @item} class="list-row">
-        <div class="list-col-grow">
-          <div class="font-bold">{item.title}</div>
-          <div>{render_slot(item)}</div>
+    <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
+      <li :for={item <- @item} class="py-3">
+        <div>
+          <div class="font-bold text-zinc-900 dark:text-zinc-100">{item.title}</div>
+          <div class="text-zinc-600 dark:text-zinc-400">{render_slot(item)}</div>
         </div>
       </li>
     </ul>

@@ -48,6 +48,11 @@ const ThemeToggle = {
     } else {
       // Set explicit light or dark theme
       root.setAttribute("data-theme", theme);
+      if (theme === "dark") {
+        root.classList.add("dark");
+      } else {
+        root.classList.remove("dark");
+      }
     }
 
     // Update visual indicator on the element
@@ -59,6 +64,11 @@ const ThemeToggle = {
     const resolvedTheme = prefersDark ? "dark" : "light";
     // For system preference, we still need to set the attribute for CSS to pick up
     root.setAttribute("data-theme", resolvedTheme);
+    if (prefersDark) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
   },
 
   getResolvedTheme(theme) {

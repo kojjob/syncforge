@@ -6,8 +6,8 @@ defmodule SyncforgeWeb.Endpoint do
   # Set :encryption_salt if you would also like to encrypt it.
   @session_options [
     store: :cookie,
-    key: "_syncforge_key",
-    signing_salt: "NaxXBqxF",
+    key: "_syncforge_key_v2",
+    signing_salt: "Kj8xPzQw",
     same_site: "Lax"
   ]
 

@@ -40,19 +40,19 @@ defmodule SyncforgeWeb.LandingLive do
   defp code_example("presence") do
     """
     <span class="text-zinc-500">// Initialize SyncForge and join a room</span>
-    <span class="text-purple-400">import</span> { SyncForge } <span class="text-purple-400">from</span> <span class="text-emerald-400">'@syncforge/sdk'</span>
+    <span class="text-purple-600 dark:text-purple-400">import</span> { SyncForge } <span class="text-purple-600 dark:text-purple-400">from</span> <span class="text-emerald-600 dark:text-emerald-400">'@syncforge/sdk'</span>
 
-    <span class="text-purple-400">const</span> client = <span class="text-purple-400">new</span> <span class="text-pink-400">SyncForge</span>({
-      apiKey: <span class="text-emerald-400">'your-api-key'</span>
+    <span class="text-purple-600 dark:text-purple-400">const</span> client = <span class="text-purple-600 dark:text-purple-400">new</span> <span class="text-pink-600 dark:text-pink-400">SyncForge</span>({
+      apiKey: <span class="text-emerald-600 dark:text-emerald-400">'your-api-key'</span>
     })
 
-    <span class="text-purple-400">const</span> room = client.<span class="text-pink-400">joinRoom</span>(<span class="text-emerald-400">'my-room'</span>, {
-      user: { name: <span class="text-emerald-400">'John'</span>, avatar: <span class="text-emerald-400">'...'</span> }
+    <span class="text-purple-600 dark:text-purple-400">const</span> room = client.<span class="text-pink-600 dark:text-pink-400">joinRoom</span>(<span class="text-emerald-600 dark:text-emerald-400">'my-room'</span>, {
+      user: { name: <span class="text-emerald-600 dark:text-emerald-400">'John'</span>, avatar: <span class="text-emerald-600 dark:text-emerald-400">'...'</span> }
     })
 
     <span class="text-zinc-500">// Subscribe to presence changes</span>
-    room.<span class="text-pink-400">on</span>(<span class="text-emerald-400">'presence'</span>, (users) => {
-      console.<span class="text-pink-400">log</span>(<span class="text-emerald-400">'Online:'</span>, users.length)
+    room.<span class="text-pink-600 dark:text-pink-400">on</span>(<span class="text-emerald-600 dark:text-emerald-400">'presence'</span>, (users) => {
+      console.<span class="text-pink-600 dark:text-pink-400">log</span>(<span class="text-emerald-600 dark:text-emerald-400">'Online:'</span>, users.length)
     })
     """
   end
@@ -60,9 +60,9 @@ defmodule SyncforgeWeb.LandingLive do
   defp code_example("cursors") do
     """
     <span class="text-zinc-500">// Track and display live cursors</span>
-    room.<span class="text-pink-400">on</span>(<span class="text-emerald-400">'cursors'</span>, (cursors) => {
-      cursors.<span class="text-pink-400">forEach</span>((cursor) => {
-        <span class="text-pink-400">renderCursor</span>({
+    room.<span class="text-pink-600 dark:text-pink-400">on</span>(<span class="text-emerald-600 dark:text-emerald-400">'cursors'</span>, (cursors) => {
+      cursors.<span class="text-pink-600 dark:text-pink-400">forEach</span>((cursor) => {
+        <span class="text-pink-600 dark:text-pink-400">renderCursor</span>({
           id: cursor.userId,
           x: cursor.x,
           y: cursor.y,
@@ -72,8 +72,8 @@ defmodule SyncforgeWeb.LandingLive do
     })
 
     <span class="text-zinc-500">// Update your cursor position</span>
-    document.<span class="text-pink-400">addEventListener</span>(<span class="text-emerald-400">'mousemove'</span>, (e) => {
-      room.<span class="text-pink-400">updateCursor</span>({ x: e.clientX, y: e.clientY })
+    document.<span class="text-pink-600 dark:text-pink-400">addEventListener</span>(<span class="text-emerald-600 dark:text-emerald-400">'mousemove'</span>, (e) => {
+      room.<span class="text-pink-600 dark:text-pink-400">updateCursor</span>({ x: e.clientX, y: e.clientY })
     })
     """
   end
@@ -81,18 +81,18 @@ defmodule SyncforgeWeb.LandingLive do
   defp code_example("comments") do
     """
     <span class="text-zinc-500">// Add threaded comments to any element</span>
-    <span class="text-purple-400">const</span> thread = room.<span class="text-pink-400">createThread</span>({
-      anchorId: <span class="text-emerald-400">'element-123'</span>,
+    <span class="text-purple-600 dark:text-purple-400">const</span> thread = room.<span class="text-pink-600 dark:text-pink-400">createThread</span>({
+      anchorId: <span class="text-emerald-600 dark:text-emerald-400">'element-123'</span>,
       position: { x: 100, y: 200 }
     })
 
-    <span class="text-purple-400">await</span> thread.<span class="text-pink-400">addComment</span>({
-      body: <span class="text-emerald-400">'This needs more contrast'</span>
+    <span class="text-purple-600 dark:text-purple-400">await</span> thread.<span class="text-pink-600 dark:text-pink-400">addComment</span>({
+      body: <span class="text-emerald-600 dark:text-emerald-400">'This needs more contrast'</span>
     })
 
     <span class="text-zinc-500">// Subscribe to new comments</span>
-    room.<span class="text-pink-400">on</span>(<span class="text-emerald-400">'comment:new'</span>, (comment) => {
-      <span class="text-pink-400">showNotification</span>(comment)
+    room.<span class="text-pink-600 dark:text-pink-400">on</span>(<span class="text-emerald-600 dark:text-emerald-400">'comment:new'</span>, (comment) => {
+      <span class="text-pink-600 dark:text-pink-400">showNotification</span>(comment)
     })
     """
   end
