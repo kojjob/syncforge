@@ -14,6 +14,8 @@ defmodule Syncforge.Application do
       {Phoenix.PubSub, name: Syncforge.PubSub},
       # Presence tracking for real-time collaboration
       SyncforgeWeb.Presence,
+      # Cursor throttling for rate-limiting cursor broadcasts
+      {Syncforge.Cursors.Throttler, interval_ms: cursor_throttle_interval()},
       # Start to serve requests, typically the last entry
       SyncforgeWeb.Endpoint
     ]
@@ -30,5 +32,10 @@ defmodule Syncforge.Application do
   def config_change(changed, _new, removed) do
     SyncforgeWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  # Cursor throttle interval from config (default: 16ms for ~60fps)
+  defp cursor_throttle_interval do
+    Application.get_env(:syncforge, :cursor_throttle_interval_ms, 16)
   end
 end
