@@ -196,6 +196,234 @@ defmodule SyncforgeWeb.RoomChannelTest do
     end
   end
 
+  describe "handle_in comment:create" do
+    setup %{socket: socket, user: user} do
+      # Create a room in the database for comments to belong to
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Test Room", is_public: true})
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+
+      {:ok, socket: socket, user: user, room: room}
+    end
+
+    test "creates comment and broadcasts to room", %{socket: socket, user: user, room: room} do
+      comment_attrs = %{
+        "body" => "This is a test comment",
+        "anchor_id" => "element-123",
+        "anchor_type" => "element"
+      }
+
+      ref = push(socket, "comment:create", comment_attrs)
+
+      # Should reply with the created comment
+      assert_reply ref, :ok, %{comment: comment}
+      assert comment.body == "This is a test comment"
+      assert comment.anchor_id == "element-123"
+      assert comment.anchor_type == "element"
+      assert comment.user_id == user.id
+      assert comment.room_id == room.id
+
+      # Should broadcast the new comment to all room members
+      assert_broadcast "comment:created", %{comment: broadcast_comment}
+      assert broadcast_comment.body == "This is a test comment"
+      assert broadcast_comment.user_id == user.id
+    end
+
+    test "creates threaded reply comment", %{socket: socket, user: _user, room: _room} do
+      # First create a parent comment
+      parent_attrs = %{"body" => "Parent comment"}
+      ref = push(socket, "comment:create", parent_attrs)
+      assert_reply ref, :ok, %{comment: parent}
+
+      # Clear the broadcast from parent creation
+      assert_broadcast "comment:created", _parent_broadcast
+
+      # Create a reply
+      reply_attrs = %{
+        "body" => "This is a reply",
+        "parent_id" => parent.id
+      }
+
+      ref = push(socket, "comment:create", reply_attrs)
+      assert_reply ref, :ok, %{comment: reply}
+      assert reply.parent_id == parent.id
+      assert reply.body == "This is a reply"
+    end
+
+    test "returns error for invalid comment", %{socket: socket} do
+      # Empty body should fail validation
+      invalid_attrs = %{"body" => ""}
+
+      ref = push(socket, "comment:create", invalid_attrs)
+
+      assert_reply ref, :error, %{errors: errors}
+      assert errors != %{}
+    end
+
+    test "includes position data when provided", %{socket: socket} do
+      comment_attrs = %{
+        "body" => "Positioned comment",
+        "anchor_type" => "point",
+        "position" => %{"x" => 100, "y" => 200}
+      }
+
+      ref = push(socket, "comment:create", comment_attrs)
+      assert_reply ref, :ok, %{comment: comment}
+      assert comment.position == %{"x" => 100, "y" => 200}
+    end
+  end
+
+  describe "handle_in comment:update" do
+    setup %{socket: socket, user: user} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Test Room", is_public: true})
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+
+      # Create a comment to update
+      {:ok, comment} =
+        Syncforge.Comments.create_comment(%{
+          body: "Original body",
+          room_id: room.id,
+          user_id: user.id
+        })
+
+      {:ok, socket: socket, user: user, room: room, comment: comment}
+    end
+
+    test "updates comment body and broadcasts", %{socket: socket, comment: comment} do
+      update_attrs = %{
+        "id" => comment.id,
+        "body" => "Updated body"
+      }
+
+      ref = push(socket, "comment:update", update_attrs)
+
+      assert_reply ref, :ok, %{comment: updated}
+      assert updated.body == "Updated body"
+      assert updated.id == comment.id
+
+      # Should broadcast the update
+      assert_broadcast "comment:updated", %{comment: broadcast_comment}
+      assert broadcast_comment.body == "Updated body"
+    end
+
+    test "updates anchor position", %{socket: socket, comment: comment} do
+      update_attrs = %{
+        "id" => comment.id,
+        "anchor_id" => "new-element",
+        "anchor_type" => "element",
+        "position" => %{"x" => 50, "y" => 75}
+      }
+
+      ref = push(socket, "comment:update", update_attrs)
+
+      assert_reply ref, :ok, %{comment: updated}
+      assert updated.anchor_id == "new-element"
+      assert updated.position == %{"x" => 50, "y" => 75}
+    end
+
+    test "returns error for non-existent comment", %{socket: socket} do
+      fake_id = Ecto.UUID.generate()
+
+      ref = push(socket, "comment:update", %{"id" => fake_id, "body" => "test"})
+
+      assert_reply ref, :error, %{reason: :not_found}
+    end
+  end
+
+  describe "handle_in comment:delete" do
+    setup %{socket: socket, user: user} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Test Room", is_public: true})
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+
+      {:ok, comment} =
+        Syncforge.Comments.create_comment(%{
+          body: "Comment to delete",
+          room_id: room.id,
+          user_id: user.id
+        })
+
+      {:ok, socket: socket, user: user, room: room, comment: comment}
+    end
+
+    test "deletes comment and broadcasts removal", %{socket: socket, comment: comment} do
+      ref = push(socket, "comment:delete", %{"id" => comment.id})
+
+      assert_reply ref, :ok, %{}
+
+      # Should broadcast the deletion
+      assert_broadcast "comment:deleted", %{comment_id: deleted_id}
+      assert deleted_id == comment.id
+
+      # Comment should no longer exist
+      assert Syncforge.Comments.get_comment(comment.id) == nil
+    end
+
+    test "returns error for non-existent comment", %{socket: socket} do
+      fake_id = Ecto.UUID.generate()
+
+      ref = push(socket, "comment:delete", %{"id" => fake_id})
+
+      assert_reply ref, :error, %{reason: :not_found}
+    end
+  end
+
+  describe "handle_in comment:resolve" do
+    setup %{socket: socket, user: user} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Test Room", is_public: true})
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+
+      {:ok, comment} =
+        Syncforge.Comments.create_comment(%{
+          body: "Comment to resolve",
+          room_id: room.id,
+          user_id: user.id
+        })
+
+      {:ok, socket: socket, user: user, room: room, comment: comment}
+    end
+
+    test "resolves comment and broadcasts", %{socket: socket, comment: comment} do
+      ref = push(socket, "comment:resolve", %{"id" => comment.id, "resolved" => true})
+
+      assert_reply ref, :ok, %{comment: resolved}
+      assert resolved.resolved_at != nil
+
+      assert_broadcast "comment:resolved", %{comment: broadcast_comment}
+      assert broadcast_comment.id == comment.id
+      assert broadcast_comment.resolved_at != nil
+    end
+
+    test "unresolves comment when resolved is false", %{socket: socket, comment: comment} do
+      # First resolve the comment
+      {:ok, resolved} = Syncforge.Comments.resolve_comment(comment)
+      assert resolved.resolved_at != nil
+
+      # Then unresolve it
+      ref = push(socket, "comment:resolve", %{"id" => comment.id, "resolved" => false})
+
+      assert_reply ref, :ok, %{comment: unresolved}
+      assert unresolved.resolved_at == nil
+
+      assert_broadcast "comment:resolved", %{comment: broadcast_comment}
+      assert broadcast_comment.resolved_at == nil
+    end
+
+    test "returns error for non-existent comment", %{socket: socket} do
+      fake_id = Ecto.UUID.generate()
+
+      ref = push(socket, "comment:resolve", %{"id" => fake_id, "resolved" => true})
+
+      assert_reply ref, :error, %{reason: :not_found}
+    end
+  end
+
   # Helper to generate test tokens
   defp generate_test_token(user) do
     Phoenix.Token.sign(SyncforgeWeb.Endpoint, "user socket", user)

@@ -48,7 +48,7 @@
 ### Threaded Comments
 - [x] Comment schema with threading (parent_id)
 - [x] Element anchoring (anchor_id, position)
-- [ ] Real-time comment sync
+- [x] Real-time comment sync
 - [x] Comment resolution (mark as resolved)
 - [ ] Reactions (emoji)
 
@@ -178,11 +178,12 @@
 8. **Comment Schema** - Threaded comments with anchoring, resolution, and cascade delete
 9. **CI Pipeline** - GitHub Actions for tests and format checking on PRs
 10. **Cursor Labels** - User name and deterministic color in cursor broadcasts
+11. **Real-time Comment Sync** - Channel handlers for comment CRUD with broadcasts
 
 ### Up Next
-- Real-time comment sync (channel integration)
 - Room state persistence
 - Client-side cursor smoothing
+- Selection highlighting
 
 ---
 
