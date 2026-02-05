@@ -7,7 +7,7 @@ defmodule SyncforgeWeb.LandingLiveTest do
     test "renders the landing page", %{conn: conn} do
       {:ok, _view, html} = live(conn, ~p"/")
 
-      assert html =~ "Collaboration"
+      assert html =~ "Sync like"
       assert html =~ "landing-page"
       assert html =~ "SyncForge"
     end
@@ -15,8 +15,8 @@ defmodule SyncforgeWeb.LandingLiveTest do
     test "contains hero section with tagline", %{conn: conn} do
       {:ok, _view, html} = live(conn, ~p"/")
 
-      assert html =~ "made seamless"
-      assert html =~ "Add real-time presence"
+      assert html =~ "magic"
+      assert html =~ "real-time presence"
     end
 
     test "displays feature sections", %{conn: conn} do
@@ -90,8 +90,8 @@ defmodule SyncforgeWeb.LandingLiveTest do
     test "contains call-to-action buttons", %{conn: conn} do
       {:ok, _view, html} = live(conn, ~p"/")
 
-      assert html =~ "Get started"
-      assert html =~ "Start building free"
+      assert html =~ "Get Started"
+      assert html =~ "Start Building Free"
     end
   end
 end

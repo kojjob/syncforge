@@ -5,7 +5,7 @@ defmodule SyncforgeWeb.PageControllerTest do
     conn = get(conn, ~p"/")
     # Landing page (LiveView) is now the root
     assert html_response(conn, 200) =~ "landing-page"
-    assert html_response(conn, 200) =~ "Collaboration"
+    assert html_response(conn, 200) =~ "SyncForge"
   end
 
   test "GET /home renders original home page", %{conn: conn} do
