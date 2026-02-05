@@ -287,14 +287,15 @@ defmodule Syncforge.Rooms do
 
   Includes:
   - Room metadata (id, name, config, etc.)
-  - Current comments
+  - Current comments with embedded reactions
+  - Recent activities (last 50)
 
   For ad-hoc rooms (room_id not in database), returns a minimal state.
 
   ## Examples
 
       iex> get_state(room_id)
-      %{room: %{id: "...", name: "...", ...}, comments: [...]}
+      %{room: %{id: "...", name: "...", ...}, comments: [...], activities: [...]}
 
   """
   def get_state(room_id) do
@@ -312,7 +313,8 @@ defmodule Syncforge.Rooms do
             metadata: nil,
             config: nil
           },
-          comments: []
+          comments: [],
+          activities: []
         }
 
       room ->
@@ -329,9 +331,15 @@ defmodule Syncforge.Rooms do
             serialize_comment(comment, reactions)
           end)
 
+        # Get recent activities (last 50)
+        activities =
+          Syncforge.Activity.list_room_activities(room_id, limit: 50)
+          |> Enum.map(&Syncforge.Activity.serialize_activity/1)
+
         %{
           room: serialize_room(room),
-          comments: comments_with_reactions
+          comments: comments_with_reactions,
+          activities: activities
         }
     end
   end

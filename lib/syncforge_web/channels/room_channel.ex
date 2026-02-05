@@ -7,6 +7,7 @@ defmodule SyncforgeWeb.RoomChannel do
   - Live cursor positions
   - Real-time events (typing, selections, etc.)
   - Threaded comments with anchoring
+  - Activity feed (room-level event history)
   - Document sync (future: CRDT via Yjs)
 
   ## Topic Format
@@ -26,6 +27,7 @@ defmodule SyncforgeWeb.RoomChannel do
   - `reaction:add` - Add an emoji reaction to a comment
   - `reaction:remove` - Remove an emoji reaction from a comment
   - `reaction:toggle` - Toggle an emoji reaction (add if missing, remove if exists)
+  - `activity:list` - List paginated activities for the room
 
   ### Server → Client
   - `cursor:update` - Broadcast cursor positions
@@ -37,10 +39,12 @@ defmodule SyncforgeWeb.RoomChannel do
   - `comment:resolved` - Comment resolution status changed
   - `reaction:added` - Reaction was added to a comment
   - `reaction:removed` - Reaction was removed from a comment
+  - `activity:created` - New activity was recorded (broadcast to room)
   """
 
   use SyncforgeWeb, :channel
 
+  alias Syncforge.Activity
   alias Syncforge.Cursors.Throttler
   alias SyncforgeWeb.Presence
 
@@ -209,6 +213,14 @@ defmodule SyncforgeWeb.RoomChannel do
       {:ok, comment} ->
         # Broadcast the new comment to all room members
         broadcast!(socket, "comment:created", %{comment: serialize_comment(comment)})
+
+        # Create and broadcast activity
+        create_and_broadcast_activity(socket, "comment_created", %{
+          subject_id: comment.id,
+          subject_type: "comment",
+          payload: %{body_preview: String.slice(comment.body || "", 0, 100)}
+        })
+
         {:reply, {:ok, %{comment: serialize_comment(comment)}}, socket}
 
       {:error, changeset} ->
@@ -247,6 +259,14 @@ defmodule SyncforgeWeb.RoomChannel do
         case Syncforge.Comments.delete_comment(comment) do
           {:ok, _deleted} ->
             broadcast!(socket, "comment:deleted", %{comment_id: comment_id})
+
+            # Create and broadcast activity
+            create_and_broadcast_activity(socket, "comment_deleted", %{
+              subject_id: comment_id,
+              subject_type: "comment",
+              payload: %{}
+            })
+
             {:reply, {:ok, %{}}, socket}
 
           {:error, _changeset} ->
@@ -272,6 +292,16 @@ defmodule SyncforgeWeb.RoomChannel do
         case result do
           {:ok, updated} ->
             broadcast!(socket, "comment:resolved", %{comment: serialize_comment(updated)})
+
+            # Only create activity when resolving, not when unresolving
+            if resolved do
+              create_and_broadcast_activity(socket, "comment_resolved", %{
+                subject_id: comment_id,
+                subject_type: "comment",
+                payload: %{}
+              })
+            end
+
             {:reply, {:ok, %{comment: serialize_comment(updated)}}, socket}
 
           {:error, changeset} ->
@@ -295,6 +325,14 @@ defmodule SyncforgeWeb.RoomChannel do
     case Syncforge.Reactions.add_reaction(attrs) do
       {:ok, reaction} ->
         broadcast!(socket, "reaction:added", %{reaction: serialize_reaction(reaction)})
+
+        # Create and broadcast activity
+        create_and_broadcast_activity(socket, "reaction_added", %{
+          subject_id: comment_id,
+          subject_type: "comment",
+          payload: %{emoji: emoji}
+        })
+
         {:reply, {:ok, %{reaction: serialize_reaction(reaction)}}, socket}
 
       {:error, changeset} ->
@@ -313,6 +351,13 @@ defmodule SyncforgeWeb.RoomChannel do
           comment_id: comment_id,
           user_id: user.id,
           emoji: emoji
+        })
+
+        # Create and broadcast activity
+        create_and_broadcast_activity(socket, "reaction_removed", %{
+          subject_id: comment_id,
+          subject_type: "comment",
+          payload: %{emoji: emoji}
         })
 
         {:reply, {:ok, %{}}, socket}
@@ -363,6 +408,24 @@ defmodule SyncforgeWeb.RoomChannel do
       {:error, changeset} ->
         {:reply, {:error, %{errors: format_changeset_errors(changeset)}}, socket}
     end
+  end
+
+  # Activity feed events
+
+  @impl true
+  def handle_in("activity:list", params, socket) do
+    room_id = socket.assigns.room_id
+
+    opts = [
+      limit: Map.get(params, "limit", 50),
+      offset: Map.get(params, "offset", 0)
+    ]
+
+    activities =
+      Activity.list_room_activities(room_id, opts)
+      |> Enum.map(&Activity.serialize_activity/1)
+
+    {:reply, {:ok, %{activities: activities}}, socket}
   end
 
   @impl true
@@ -434,5 +497,31 @@ defmodule SyncforgeWeb.RoomChannel do
       user_id: reaction.user_id,
       inserted_at: reaction.inserted_at
     }
+  end
+
+  # Create an activity record and broadcast it to the room
+  defp create_and_broadcast_activity(socket, type, opts) do
+    user = socket.assigns.current_user
+    room_id = socket.assigns.room_id
+
+    attrs =
+      %{
+        type: type,
+        room_id: room_id,
+        actor_id: user.id,
+        subject_id: Map.get(opts, :subject_id),
+        subject_type: Map.get(opts, :subject_type),
+        payload: Map.get(opts, :payload, %{})
+      }
+
+    case Activity.create_activity(attrs) do
+      {:ok, activity} ->
+        broadcast!(socket, "activity:created", %{
+          activity: Activity.serialize_activity(activity)
+        })
+
+      {:error, reason} ->
+        Logger.warning("Failed to create activity: #{inspect(reason)}")
+    end
   end
 end
