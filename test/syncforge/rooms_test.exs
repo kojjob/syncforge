@@ -211,6 +211,88 @@ defmodule Syncforge.RoomsTest do
     end
   end
 
+  describe "get_state/1" do
+    test "returns room data and comments for existing room" do
+      room = room_fixture(%{name: "State Test Room", max_participants: 50, is_public: true})
+
+      # Create some comments in the room
+      user_id = Ecto.UUID.generate()
+
+      {:ok, comment1} =
+        Syncforge.Comments.create_comment(%{
+          body: "First comment",
+          room_id: room.id,
+          user_id: user_id
+        })
+
+      {:ok, _comment2} =
+        Syncforge.Comments.create_comment(%{
+          body: "Second comment",
+          room_id: room.id,
+          user_id: user_id,
+          anchor_id: "element-123"
+        })
+
+      state = Rooms.get_state(room.id)
+
+      # Verify room data
+      assert state.room.id == room.id
+      assert state.room.name == "State Test Room"
+      assert state.room.max_participants == 50
+      assert state.room.is_public == true
+
+      # Verify comments
+      assert length(state.comments) == 2
+      assert Enum.any?(state.comments, fn c -> c.id == comment1.id end)
+    end
+
+    test "returns empty comments for room without comments" do
+      room = room_fixture(%{name: "Empty Room"})
+
+      state = Rooms.get_state(room.id)
+
+      assert state.room.id == room.id
+      assert state.comments == []
+    end
+
+    test "returns minimal state for non-existent room (ad-hoc room)" do
+      fake_id = Ecto.UUID.generate()
+
+      state = Rooms.get_state(fake_id)
+
+      assert state.room.id == fake_id
+      assert state.room.name == nil
+      assert state.room.is_public == true
+      assert state.comments == []
+    end
+
+    test "serializes comment fields correctly" do
+      room = room_fixture()
+      user_id = Ecto.UUID.generate()
+
+      {:ok, comment} =
+        Syncforge.Comments.create_comment(%{
+          body: "Test comment",
+          room_id: room.id,
+          user_id: user_id,
+          anchor_id: "elem-1",
+          anchor_type: "element",
+          position: %{"x" => 100, "y" => 200}
+        })
+
+      state = Rooms.get_state(room.id)
+      [serialized_comment] = state.comments
+
+      assert serialized_comment.id == comment.id
+      assert serialized_comment.body == "Test comment"
+      assert serialized_comment.anchor_id == "elem-1"
+      assert serialized_comment.anchor_type == "element"
+      assert serialized_comment.position == %{"x" => 100, "y" => 200}
+      assert serialized_comment.user_id == user_id
+      assert serialized_comment.room_id == room.id
+    end
+  end
+
   # Helper function to create test rooms
   defp room_fixture(attrs \\ %{}) do
     {:ok, room} =

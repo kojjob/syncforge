@@ -32,7 +32,7 @@
 - [x] Room CRUD operations
 - [x] Room authorization (capacity + access checks)
 - [x] Room configuration (max participants, metadata)
-- [ ] Room state persistence
+- [x] Room state persistence
 
 ---
 
@@ -179,9 +179,9 @@
 9. **CI Pipeline** - GitHub Actions for tests and format checking on PRs
 10. **Cursor Labels** - User name and deterministic color in cursor broadcasts
 11. **Real-time Comment Sync** - Channel handlers for comment CRUD with broadcasts
+12. **Room State Persistence** - Push room state (comments, metadata) to users on join
 
 ### Up Next
-- Room state persistence
 - Client-side cursor smoothing
 - Selection highlighting
 

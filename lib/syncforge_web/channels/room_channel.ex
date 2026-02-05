@@ -76,6 +76,10 @@ defmodule SyncforgeWeb.RoomChannel do
     # Push current presence state to the joining user
     push(socket, "presence_state", Presence.list(socket))
 
+    # Push current room state (comments, room metadata) to the joining user
+    room_state = Syncforge.Rooms.get_state(room_id)
+    push(socket, "room_state", room_state)
+
     Logger.info("User #{user.id} joined room #{room_id}")
 
     {:noreply, socket}
