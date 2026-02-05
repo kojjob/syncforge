@@ -11,6 +11,11 @@ defmodule SyncforgeWeb.Endpoint do
     same_site: "Lax"
   ]
 
+  # Real-time collaboration socket
+  socket "/socket", SyncforgeWeb.UserSocket,
+    websocket: true,
+    longpoll: false
+
   socket "/live", Phoenix.LiveView.Socket,
     websocket: [connect_info: [session: @session_options]],
     longpoll: [connect_info: [session: @session_options]]

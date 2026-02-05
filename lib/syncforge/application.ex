@@ -12,8 +12,8 @@ defmodule Syncforge.Application do
       Syncforge.Repo,
       {DNSCluster, query: Application.get_env(:syncforge, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Syncforge.PubSub},
-      # Start a worker by calling: Syncforge.Worker.start_link(arg)
-      # {Syncforge.Worker, arg},
+      # Presence tracking for real-time collaboration
+      SyncforgeWeb.Presence,
       # Start to serve requests, typically the last entry
       SyncforgeWeb.Endpoint
     ]
