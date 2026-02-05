@@ -2,6 +2,8 @@
  * Phoenix LiveView Hooks for SyncForge
  */
 
+import CursorTracking from "./cursor_tracking.js";
+
 /**
  * ThemeToggle Hook
  * Handles dark/light mode with system preference detection
@@ -104,7 +106,8 @@ const PresencePulse = {
 export const Hooks = {
   ThemeToggle,
   AnimatedCursors,
-  PresencePulse
+  PresencePulse,
+  CursorTracking
 };
 
 export default Hooks;
