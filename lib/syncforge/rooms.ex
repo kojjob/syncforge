@@ -283,6 +283,80 @@ defmodule Syncforge.Rooms do
   end
 
   @doc """
+  Returns the current state of a room for syncing to joining users.
+
+  Includes:
+  - Room metadata (id, name, config, etc.)
+  - Current comments
+
+  For ad-hoc rooms (room_id not in database), returns a minimal state.
+
+  ## Examples
+
+      iex> get_state(room_id)
+      %{room: %{id: "...", name: "...", ...}, comments: [...]}
+
+  """
+  def get_state(room_id) do
+    case get_room(room_id) do
+      nil ->
+        # Ad-hoc room - return minimal state
+        %{
+          room: %{
+            id: room_id,
+            name: nil,
+            slug: nil,
+            type: nil,
+            is_public: true,
+            max_participants: nil,
+            metadata: nil,
+            config: nil
+          },
+          comments: []
+        }
+
+      room ->
+        comments = Syncforge.Comments.list_comments(room_id)
+
+        %{
+          room: serialize_room(room),
+          comments: Enum.map(comments, &serialize_comment/1)
+        }
+    end
+  end
+
+  # Serialize room struct for JSON response
+  defp serialize_room(room) do
+    %{
+      id: room.id,
+      name: room.name,
+      slug: room.slug,
+      type: room.type,
+      is_public: room.is_public,
+      max_participants: room.max_participants,
+      metadata: room.metadata,
+      config: room.config
+    }
+  end
+
+  # Serialize comment struct for JSON response
+  defp serialize_comment(comment) do
+    %{
+      id: comment.id,
+      body: comment.body,
+      anchor_id: comment.anchor_id,
+      anchor_type: comment.anchor_type,
+      position: comment.position,
+      resolved_at: comment.resolved_at,
+      user_id: comment.user_id,
+      room_id: comment.room_id,
+      parent_id: comment.parent_id,
+      inserted_at: comment.inserted_at,
+      updated_at: comment.updated_at
+    }
+  end
+
+  @doc """
   Returns the current participant count for a room.
 
   Uses Phoenix Presence to get the accurate real-time count.

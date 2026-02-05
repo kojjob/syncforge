@@ -372,6 +372,99 @@ defmodule SyncforgeWeb.RoomChannelTest do
     end
   end
 
+  describe "room state on join" do
+    test "receives existing comments when joining room with comments", %{socket: _socket} do
+      # Create a new user and room with existing comments
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "State Test Room", is_public: true})
+
+      existing_user_id = Ecto.UUID.generate()
+
+      # Create some existing comments in the room
+      {:ok, comment1} =
+        Syncforge.Comments.create_comment(%{
+          body: "First existing comment",
+          room_id: room.id,
+          user_id: existing_user_id
+        })
+
+      {:ok, comment2} =
+        Syncforge.Comments.create_comment(%{
+          body: "Second existing comment",
+          room_id: room.id,
+          user_id: existing_user_id,
+          anchor_id: "element-456"
+        })
+
+      # Now a new user joins
+      new_user = %{
+        id: Ecto.UUID.generate(),
+        name: "New Joiner",
+        avatar_url: "https://example.com/new.png"
+      }
+
+      {:ok, new_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(new_user)}, connect_info: %{})
+
+      {:ok, _reply, _socket} =
+        subscribe_and_join(new_socket, RoomChannel, "room:#{room.id}")
+
+      # Should receive room_state with existing comments
+      assert_push "room_state", %{comments: comments, room: room_data}
+      assert length(comments) == 2
+      assert Enum.any?(comments, fn c -> c.id == comment1.id end)
+      assert Enum.any?(comments, fn c -> c.id == comment2.id end)
+      assert room_data.id == room.id
+    end
+
+    test "receives empty comments list when joining room without comments", %{socket: _socket} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Empty Room", is_public: true})
+
+      new_user = %{
+        id: Ecto.UUID.generate(),
+        name: "Solo User",
+        avatar_url: "https://example.com/solo.png"
+      }
+
+      {:ok, new_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(new_user)}, connect_info: %{})
+
+      {:ok, _reply, _socket} =
+        subscribe_and_join(new_socket, RoomChannel, "room:#{room.id}")
+
+      # Should receive room_state with empty comments
+      assert_push "room_state", %{comments: comments, room: room_data}
+      assert comments == []
+      assert room_data.id == room.id
+    end
+
+    test "room state includes room metadata", %{socket: _socket} do
+      {:ok, room} =
+        Syncforge.Rooms.create_room(%{
+          name: "Metadata Room",
+          is_public: false,
+          max_participants: 10,
+          metadata: %{"description" => "Test room"}
+        })
+
+      new_user = %{
+        id: Ecto.UUID.generate(),
+        name: "Metadata User",
+        avatar_url: "https://example.com/meta.png"
+      }
+
+      {:ok, new_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(new_user)}, connect_info: %{})
+
+      {:ok, _reply, _socket} =
+        subscribe_and_join(new_socket, RoomChannel, "room:#{room.id}")
+
+      assert_push "room_state", %{room: room_data}
+      assert room_data.name == "Metadata Room"
+      assert room_data.is_public == false
+      assert room_data.max_participants == 10
+    end
+  end
+
   describe "handle_in comment:resolve" do
     setup %{socket: socket, user: user} do
       {:ok, room} = Syncforge.Rooms.create_room(%{name: "Test Room", is_public: true})
