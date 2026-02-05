@@ -19,51 +19,70 @@ defmodule SyncforgeWeb.RoomChannelTest do
 
   describe "join/3" do
     test "joins room successfully with valid token", %{socket: socket} do
-      room_id = Ecto.UUID.generate()
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Join Test Room", is_public: true})
 
       assert {:ok, _reply, _socket} =
-               subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+               subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
     end
 
     test "assigns room_id to socket", %{socket: socket} do
-      room_id = Ecto.UUID.generate()
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Assign Test Room", is_public: true})
 
       {:ok, _reply, socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
 
-      assert socket.assigns.room_id == room_id
+      assert socket.assigns.room_id == room.id
     end
 
     test "tracks presence on join", %{socket: socket, user: user} do
-      room_id = Ecto.UUID.generate()
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Presence Test Room", is_public: true})
 
       {:ok, _reply, _socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
 
       # Give presence time to sync
       Process.sleep(50)
 
-      presence = SyncforgeWeb.Presence.list("room:#{room_id}")
+      presence = SyncforgeWeb.Presence.list("room:#{room.id}")
       assert Map.has_key?(presence, user.id)
     end
 
     test "receives presence_state after join", %{socket: socket} do
-      room_id = Ecto.UUID.generate()
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "State Test Room", is_public: true})
 
       {:ok, reply, _socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
 
       assert Map.has_key?(reply, :presence)
+    end
+
+    test "rejects join for non-existent room", %{socket: socket} do
+      fake_room_id = Ecto.UUID.generate()
+
+      assert {:error, %{reason: :room_not_found}} =
+               subscribe_and_join(socket, RoomChannel, "room:#{fake_room_id}")
+    end
+
+    test "rejects join for private room", %{socket: socket} do
+      {:ok, private_room} =
+        Syncforge.Rooms.create_room(%{name: "Private Room", is_public: false})
+
+      assert {:error, %{reason: :unauthorized}} =
+               subscribe_and_join(socket, RoomChannel, "room:#{private_room.id}")
     end
   end
 
   describe "handle_in cursor:update" do
-    test "broadcasts cursor position to other clients", %{socket: socket} do
-      room_id = Ecto.UUID.generate()
+    setup %{socket: socket} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Cursor Test Room", is_public: true})
 
       {:ok, _reply, socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
 
+      {:ok, socket: socket, room: room}
+    end
+
+    test "broadcasts cursor position to other clients", %{socket: socket} do
       push(socket, "cursor:update", %{"x" => 100, "y" => 200})
 
       # Should broadcast to others (not self due to broadcast_from)
@@ -72,11 +91,6 @@ defmodule SyncforgeWeb.RoomChannelTest do
     end
 
     test "includes user_id in cursor broadcast", %{socket: socket, user: user} do
-      room_id = Ecto.UUID.generate()
-
-      {:ok, _reply, socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
-
       push(socket, "cursor:update", %{"x" => 50, "y" => 75})
 
       assert_broadcast "cursor:update", payload
@@ -86,18 +100,13 @@ defmodule SyncforgeWeb.RoomChannelTest do
     end
 
     test "includes user name for cursor label", %{socket: socket, user: user} do
-      room_id = Ecto.UUID.generate()
-
-      {:ok, _reply, socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
-
       push(socket, "cursor:update", %{"x" => 100, "y" => 200})
 
       assert_broadcast "cursor:update", payload
       assert payload.name == user.name
     end
 
-    test "includes cursor color when user has one", %{socket: _socket} do
+    test "includes cursor color when user has one", %{socket: _socket, room: room} do
       # Create user with a cursor color
       user_with_color = %{
         id: Ecto.UUID.generate(),
@@ -109,10 +118,8 @@ defmodule SyncforgeWeb.RoomChannelTest do
       {:ok, socket_with_color} =
         connect(UserSocket, %{"token" => generate_test_token(user_with_color)}, connect_info: %{})
 
-      room_id = Ecto.UUID.generate()
-
       {:ok, _reply, socket_with_color} =
-        subscribe_and_join(socket_with_color, RoomChannel, "room:#{room_id}")
+        subscribe_and_join(socket_with_color, RoomChannel, "room:#{room.id}")
 
       push(socket_with_color, "cursor:update", %{"x" => 100, "y" => 200})
 
@@ -121,11 +128,6 @@ defmodule SyncforgeWeb.RoomChannelTest do
     end
 
     test "uses default color when user has no cursor_color", %{socket: socket} do
-      room_id = Ecto.UUID.generate()
-
-      {:ok, _reply, socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
-
       push(socket, "cursor:update", %{"x" => 100, "y" => 200})
 
       assert_broadcast "cursor:update", payload
@@ -135,11 +137,6 @@ defmodule SyncforgeWeb.RoomChannelTest do
     end
 
     test "includes optional element_id when provided", %{socket: socket} do
-      room_id = Ecto.UUID.generate()
-
-      {:ok, _reply, socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
-
       push(socket, "cursor:update", %{"x" => 100, "y" => 200, "element_id" => "editor-panel"})
 
       assert_broadcast "cursor:update", payload
@@ -149,10 +146,10 @@ defmodule SyncforgeWeb.RoomChannelTest do
 
   describe "handle_in presence:update" do
     test "updates user presence metadata", %{socket: socket} do
-      room_id = Ecto.UUID.generate()
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Presence Update Room", is_public: true})
 
       {:ok, _reply, socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
 
       push(socket, "presence:update", %{"status" => "typing"})
 
@@ -166,16 +163,16 @@ defmodule SyncforgeWeb.RoomChannelTest do
 
   describe "terminate/2" do
     test "cleans up presence on disconnect", %{socket: socket, user: user} do
-      room_id = Ecto.UUID.generate()
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Terminate Test Room", is_public: true})
 
       {:ok, _reply, socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
 
       # Give presence time to track
       Process.sleep(50)
 
       # Verify user is tracked
-      presence = SyncforgeWeb.Presence.list("room:#{room_id}")
+      presence = SyncforgeWeb.Presence.list("room:#{room.id}")
       assert Map.has_key?(presence, user.id)
 
       # Get the channel pid before leaving
@@ -191,7 +188,7 @@ defmodule SyncforgeWeb.RoomChannelTest do
       Process.sleep(100)
 
       # Verify user is no longer tracked
-      presence = SyncforgeWeb.Presence.list("room:#{room_id}")
+      presence = SyncforgeWeb.Presence.list("room:#{room.id}")
       refute Map.has_key?(presence, user.id)
     end
   end
@@ -331,6 +328,52 @@ defmodule SyncforgeWeb.RoomChannelTest do
 
       assert_reply ref, :error, %{reason: :not_found}
     end
+
+    test "rejects update for comment from a different room", %{
+      socket: socket,
+      user: user,
+      comment: comment
+    } do
+      # Create a second room and join it
+      {:ok, other_room} = Syncforge.Rooms.create_room(%{name: "Other Room", is_public: true})
+
+      other_user = %{
+        id: user.id,
+        name: user.name,
+        avatar_url: user.avatar_url
+      }
+
+      {:ok, other_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(other_user)}, connect_info: %{})
+
+      {:ok, _reply, other_socket} =
+        subscribe_and_join(other_socket, RoomChannel, "room:#{other_room.id}")
+
+      # Try to update a comment that belongs to the first room from the second room's channel
+      ref =
+        push(other_socket, "comment:update", %{"id" => comment.id, "body" => "Cross-room edit"})
+
+      assert_reply ref, :error, %{reason: :unauthorized}
+    end
+
+    test "rejects update by non-owner", %{room: room, comment: comment} do
+      # Connect as a different user
+      other_user = %{
+        id: Ecto.UUID.generate(),
+        name: "Other User",
+        avatar_url: "https://example.com/other.png"
+      }
+
+      {:ok, other_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(other_user)}, connect_info: %{})
+
+      {:ok, _reply, other_socket} =
+        subscribe_and_join(other_socket, RoomChannel, "room:#{room.id}")
+
+      ref = push(other_socket, "comment:update", %{"id" => comment.id, "body" => "Hijacked!"})
+
+      assert_reply ref, :error, %{reason: :unauthorized}
+    end
   end
 
   describe "handle_in comment:delete" do
@@ -369,6 +412,49 @@ defmodule SyncforgeWeb.RoomChannelTest do
       ref = push(socket, "comment:delete", %{"id" => fake_id})
 
       assert_reply ref, :error, %{reason: :not_found}
+    end
+
+    test "rejects delete for comment from a different room", %{
+      socket: socket,
+      user: user,
+      comment: comment
+    } do
+      {:ok, other_room} = Syncforge.Rooms.create_room(%{name: "Other Room", is_public: true})
+
+      other_user = %{
+        id: user.id,
+        name: user.name,
+        avatar_url: user.avatar_url
+      }
+
+      {:ok, other_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(other_user)}, connect_info: %{})
+
+      {:ok, _reply, other_socket} =
+        subscribe_and_join(other_socket, RoomChannel, "room:#{other_room.id}")
+
+      ref = push(other_socket, "comment:delete", %{"id" => comment.id})
+
+      assert_reply ref, :error, %{reason: :unauthorized}
+    end
+
+    test "rejects delete by non-owner", %{room: room, comment: comment} do
+      # Connect as a different user
+      other_user = %{
+        id: Ecto.UUID.generate(),
+        name: "Other User",
+        avatar_url: "https://example.com/other.png"
+      }
+
+      {:ok, other_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(other_user)}, connect_info: %{})
+
+      {:ok, _reply, other_socket} =
+        subscribe_and_join(other_socket, RoomChannel, "room:#{room.id}")
+
+      ref = push(other_socket, "comment:delete", %{"id" => comment.id})
+
+      assert_reply ref, :error, %{reason: :unauthorized}
     end
   end
 
@@ -441,7 +527,7 @@ defmodule SyncforgeWeb.RoomChannelTest do
       {:ok, room} =
         Syncforge.Rooms.create_room(%{
           name: "Metadata Room",
-          is_public: false,
+          is_public: true,
           max_participants: 10,
           metadata: %{"description" => "Test room"}
         })
@@ -460,18 +546,22 @@ defmodule SyncforgeWeb.RoomChannelTest do
 
       assert_push "room_state", %{room: room_data}
       assert room_data.name == "Metadata Room"
-      assert room_data.is_public == false
+      assert room_data.is_public == true
       assert room_data.max_participants == 10
     end
   end
 
   describe "handle_in selection:update" do
-    test "broadcasts selection to other clients", %{socket: socket} do
-      room_id = Ecto.UUID.generate()
+    setup %{socket: socket} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Selection Test Room", is_public: true})
 
       {:ok, _reply, socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
 
+      {:ok, socket: socket, room: room}
+    end
+
+    test "broadcasts selection to other clients", %{socket: socket} do
       selection = %{
         "start" => %{"offset" => 0, "path" => [0, 0]},
         "end" => %{"offset" => 10, "path" => [0, 0]}
@@ -484,11 +574,6 @@ defmodule SyncforgeWeb.RoomChannelTest do
     end
 
     test "includes user_id in selection broadcast", %{socket: socket, user: user} do
-      room_id = Ecto.UUID.generate()
-
-      {:ok, _reply, socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
-
       selection = %{"text" => "selected text"}
 
       push(socket, "selection:update", %{"selection" => selection})
@@ -498,11 +583,6 @@ defmodule SyncforgeWeb.RoomChannelTest do
     end
 
     test "includes element_id when provided", %{socket: socket} do
-      room_id = Ecto.UUID.generate()
-
-      {:ok, _reply, socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
-
       push(socket, "selection:update", %{
         "selection" => %{"text" => "test"},
         "element_id" => "editor-main"
@@ -513,11 +593,6 @@ defmodule SyncforgeWeb.RoomChannelTest do
     end
 
     test "clears selection when selection is nil", %{socket: socket} do
-      room_id = Ecto.UUID.generate()
-
-      {:ok, _reply, socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
-
       push(socket, "selection:update", %{"selection" => nil})
 
       assert_broadcast "selection:update", payload
@@ -525,18 +600,13 @@ defmodule SyncforgeWeb.RoomChannelTest do
     end
 
     test "includes timestamp in broadcast", %{socket: socket} do
-      room_id = Ecto.UUID.generate()
-
-      {:ok, _reply, socket} =
-        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
-
       push(socket, "selection:update", %{"selection" => %{"text" => "test"}})
 
       assert_broadcast "selection:update", payload
       assert is_integer(payload.timestamp)
     end
 
-    test "includes user color for selection highlighting", %{socket: _socket} do
+    test "includes user color for selection highlighting", %{socket: _socket, room: room} do
       user_with_color = %{
         id: Ecto.UUID.generate(),
         name: "Selection User",
@@ -547,10 +617,8 @@ defmodule SyncforgeWeb.RoomChannelTest do
       {:ok, socket_with_color} =
         connect(UserSocket, %{"token" => generate_test_token(user_with_color)}, connect_info: %{})
 
-      room_id = Ecto.UUID.generate()
-
       {:ok, _reply, socket_with_color} =
-        subscribe_and_join(socket_with_color, RoomChannel, "room:#{room_id}")
+        subscribe_and_join(socket_with_color, RoomChannel, "room:#{room.id}")
 
       push(socket_with_color, "selection:update", %{"selection" => %{"text" => "test"}})
 
@@ -609,6 +677,49 @@ defmodule SyncforgeWeb.RoomChannelTest do
       ref = push(socket, "comment:resolve", %{"id" => fake_id, "resolved" => true})
 
       assert_reply ref, :error, %{reason: :not_found}
+    end
+
+    test "rejects resolve for comment from a different room", %{
+      socket: socket,
+      user: user,
+      comment: comment
+    } do
+      {:ok, other_room} = Syncforge.Rooms.create_room(%{name: "Other Room", is_public: true})
+
+      other_user = %{
+        id: user.id,
+        name: user.name,
+        avatar_url: user.avatar_url
+      }
+
+      {:ok, other_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(other_user)}, connect_info: %{})
+
+      {:ok, _reply, other_socket} =
+        subscribe_and_join(other_socket, RoomChannel, "room:#{other_room.id}")
+
+      ref = push(other_socket, "comment:resolve", %{"id" => comment.id, "resolved" => true})
+
+      assert_reply ref, :error, %{reason: :unauthorized}
+    end
+
+    test "rejects resolve by non-owner", %{room: room, comment: comment} do
+      # Connect as a different user
+      other_user = %{
+        id: Ecto.UUID.generate(),
+        name: "Other User",
+        avatar_url: "https://example.com/other.png"
+      }
+
+      {:ok, other_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(other_user)}, connect_info: %{})
+
+      {:ok, _reply, other_socket} =
+        subscribe_and_join(other_socket, RoomChannel, "room:#{room.id}")
+
+      ref = push(other_socket, "comment:resolve", %{"id" => comment.id, "resolved" => true})
+
+      assert_reply ref, :error, %{reason: :unauthorized}
     end
   end
 

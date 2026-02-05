@@ -52,19 +52,15 @@ defmodule SyncforgeWeb.RoomChannel do
 
   @impl true
   def join("room:" <> room_id, _params, socket) do
-    # TODO: Add room authorization check here
-    # case Syncforge.Rooms.authorize_join(room_id, socket.assigns.current_user) do
-    #   {:ok, room} -> ...
-    #   {:error, reason} -> {:error, %{reason: reason}}
-    # end
+    case Syncforge.Rooms.authorize_join(room_id, socket.assigns.current_user) do
+      {:ok, room} ->
+        send(self(), :after_join)
+        socket = assign(socket, :room_id, room.id)
+        {:ok, %{presence: %{}}, socket}
 
-    send(self(), :after_join)
-
-    socket =
-      socket
-      |> assign(:room_id, room_id)
-
-    {:ok, %{presence: %{}}, socket}
+      {:error, reason} ->
+        {:error, %{reason: reason}}
+    end
   end
 
   @impl true
@@ -230,82 +226,97 @@ defmodule SyncforgeWeb.RoomChannel do
 
   @impl true
   def handle_in("comment:update", %{"id" => comment_id} = params, socket) do
+    user = socket.assigns.current_user
+
     case Syncforge.Comments.get_comment(comment_id) do
       nil ->
         {:reply, {:error, %{reason: :not_found}}, socket}
 
       comment ->
-        # Only allow updating certain fields
-        update_attrs = Map.take(params, ["body", "anchor_id", "anchor_type", "position"])
+        if comment.room_id != socket.assigns.room_id or comment.user_id != user.id do
+          {:reply, {:error, %{reason: :unauthorized}}, socket}
+        else
+          update_attrs = Map.take(params, ["body", "anchor_id", "anchor_type", "position"])
 
-        case Syncforge.Comments.update_comment(comment, update_attrs) do
-          {:ok, updated} ->
-            broadcast!(socket, "comment:updated", %{comment: serialize_comment(updated)})
-            {:reply, {:ok, %{comment: serialize_comment(updated)}}, socket}
+          case Syncforge.Comments.update_comment(comment, update_attrs) do
+            {:ok, updated} ->
+              broadcast!(socket, "comment:updated", %{comment: serialize_comment(updated)})
+              {:reply, {:ok, %{comment: serialize_comment(updated)}}, socket}
 
-          {:error, changeset} ->
-            {:reply, {:error, %{errors: format_changeset_errors(changeset)}}, socket}
+            {:error, changeset} ->
+              {:reply, {:error, %{errors: format_changeset_errors(changeset)}}, socket}
+          end
         end
     end
   end
 
   @impl true
   def handle_in("comment:delete", %{"id" => comment_id}, socket) do
+    user = socket.assigns.current_user
+
     case Syncforge.Comments.get_comment(comment_id) do
       nil ->
         {:reply, {:error, %{reason: :not_found}}, socket}
 
       comment ->
-        case Syncforge.Comments.delete_comment(comment) do
-          {:ok, _deleted} ->
-            broadcast!(socket, "comment:deleted", %{comment_id: comment_id})
+        if comment.room_id != socket.assigns.room_id or comment.user_id != user.id do
+          {:reply, {:error, %{reason: :unauthorized}}, socket}
+        else
+          case Syncforge.Comments.delete_comment(comment) do
+            {:ok, _deleted} ->
+              broadcast!(socket, "comment:deleted", %{comment_id: comment_id})
 
-            # Create and broadcast activity
-            create_and_broadcast_activity(socket, "comment_deleted", %{
-              subject_id: comment_id,
-              subject_type: "comment",
-              payload: %{}
-            })
+              create_and_broadcast_activity(socket, "comment_deleted", %{
+                subject_id: comment_id,
+                subject_type: "comment",
+                payload: %{}
+              })
 
-            {:reply, {:ok, %{}}, socket}
+              {:reply, {:ok, %{}}, socket}
 
-          {:error, _changeset} ->
-            {:reply, {:error, %{reason: :delete_failed}}, socket}
+            {:error, _changeset} ->
+              {:reply, {:error, %{reason: :delete_failed}}, socket}
+          end
         end
     end
   end
 
   @impl true
   def handle_in("comment:resolve", %{"id" => comment_id, "resolved" => resolved}, socket) do
+    user = socket.assigns.current_user
+
     case Syncforge.Comments.get_comment(comment_id) do
       nil ->
         {:reply, {:error, %{reason: :not_found}}, socket}
 
       comment ->
-        result =
-          if resolved do
-            Syncforge.Comments.resolve_comment(comment)
-          else
-            Syncforge.Comments.unresolve_comment(comment)
-          end
-
-        case result do
-          {:ok, updated} ->
-            broadcast!(socket, "comment:resolved", %{comment: serialize_comment(updated)})
-
-            # Only create activity when resolving, not when unresolving
+        if comment.room_id != socket.assigns.room_id or comment.user_id != user.id do
+          {:reply, {:error, %{reason: :unauthorized}}, socket}
+        else
+          result =
             if resolved do
-              create_and_broadcast_activity(socket, "comment_resolved", %{
-                subject_id: comment_id,
-                subject_type: "comment",
-                payload: %{}
-              })
+              Syncforge.Comments.resolve_comment(comment)
+            else
+              Syncforge.Comments.unresolve_comment(comment)
             end
 
-            {:reply, {:ok, %{comment: serialize_comment(updated)}}, socket}
+          case result do
+            {:ok, updated} ->
+              broadcast!(socket, "comment:resolved", %{comment: serialize_comment(updated)})
 
-          {:error, changeset} ->
-            {:reply, {:error, %{errors: format_changeset_errors(changeset)}}, socket}
+              if resolved do
+                create_and_broadcast_activity(socket, "comment_resolved", %{
+                  subject_id: comment_id,
+                  subject_type: "comment",
+                  payload: %{}
+                })
+              end
+
+              {:reply, {:ok, %{comment: serialize_comment(updated)}}, socket}
+
+            {:error, changeset} ->
+              {:reply, {:error, %{errors: format_changeset_errors(changeset)}}, socket}
+          end
         end
     end
   end
