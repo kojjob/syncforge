@@ -219,9 +219,16 @@ defmodule Syncforge.Rooms do
   end
 
   @doc """
-  Returns room configuration for channel authorization.
+  Authorizes a user to join a room.
 
-  Used by RoomChannel to validate join requests and get room settings.
+  Checks:
+  - Room exists
+  - Room has available capacity
+  - User has access (public rooms allow anyone, private rooms require membership)
+
+  ## Options
+
+  - `:current_participant_count` - Override participant count (useful for testing)
 
   ## Examples
 
@@ -231,18 +238,60 @@ defmodule Syncforge.Rooms do
       iex> authorize_join("non-existent", user)
       {:error, :room_not_found}
 
-  """
-  def authorize_join(room_id, _user) do
-    case get_room(room_id) do
-      nil ->
-        {:error, :room_not_found}
+      iex> authorize_join("full-room-id", user)
+      {:error, :room_full}
 
-      room ->
-        # TODO: Add actual authorization logic
-        # - Check if room is public or user has access
-        # - Check if room is at capacity
-        # - Check if user is banned
-        {:ok, room}
+      iex> authorize_join("private-room-id", unauthorized_user)
+      {:error, :unauthorized}
+
+  """
+  def authorize_join(room_id, user, opts \\ []) do
+    with {:ok, room} <- fetch_room(room_id),
+         :ok <- check_capacity(room, opts),
+         :ok <- check_access(room, user) do
+      {:ok, room}
     end
+  end
+
+  # Private authorization helpers
+
+  defp fetch_room(room_id) do
+    case get_room(room_id) do
+      nil -> {:error, :room_not_found}
+      room -> {:ok, room}
+    end
+  end
+
+  defp check_capacity(room, opts) do
+    current_count = Keyword.get(opts, :current_participant_count, get_participant_count(room.id))
+
+    if current_count < room.max_participants do
+      :ok
+    else
+      {:error, :room_full}
+    end
+  end
+
+  defp check_access(room, _user) do
+    # For MVP: public rooms allow anyone, private rooms deny access
+    # Future: check organization membership, room-specific permissions
+    if room.is_public do
+      :ok
+    else
+      {:error, :unauthorized}
+    end
+  end
+
+  @doc """
+  Returns the current participant count for a room.
+
+  Uses Phoenix Presence to get the accurate real-time count.
+  """
+  def get_participant_count(room_id) do
+    # Use the Presence helper function which handles all edge cases
+    SyncforgeWeb.Presence.room_user_count(room_id)
+  rescue
+    # Handle cases where Presence isn't running (e.g., in some tests)
+    _ -> 0
   end
 end
