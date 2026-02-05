@@ -612,6 +612,296 @@ defmodule SyncforgeWeb.RoomChannelTest do
     end
   end
 
+  describe "handle_in reaction:add" do
+    setup %{socket: socket, user: user} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Reaction Test Room", is_public: true})
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+
+      {:ok, comment} =
+        Syncforge.Comments.create_comment(%{
+          body: "Comment for reactions",
+          room_id: room.id,
+          user_id: user.id
+        })
+
+      {:ok, socket: socket, user: user, room: room, comment: comment}
+    end
+
+    test "adds reaction and broadcasts to room", %{socket: socket, comment: comment, user: user} do
+      ref = push(socket, "reaction:add", %{"comment_id" => comment.id, "emoji" => "👍"})
+
+      assert_reply ref, :ok, %{reaction: reaction}
+      assert reaction.emoji == "👍"
+      assert reaction.comment_id == comment.id
+      assert reaction.user_id == user.id
+
+      assert_broadcast "reaction:added", %{reaction: broadcast_reaction}
+      assert broadcast_reaction.emoji == "👍"
+      assert broadcast_reaction.comment_id == comment.id
+    end
+
+    test "returns error for duplicate reaction", %{socket: socket, comment: comment} do
+      # Add first reaction
+      ref = push(socket, "reaction:add", %{"comment_id" => comment.id, "emoji" => "👍"})
+      assert_reply ref, :ok, _reply
+
+      # Clear the broadcast
+      assert_broadcast "reaction:added", _broadcast
+
+      # Try to add same reaction again
+      ref = push(socket, "reaction:add", %{"comment_id" => comment.id, "emoji" => "👍"})
+      assert_reply ref, :error, %{errors: errors}
+      assert errors != %{}
+    end
+
+    test "allows adding different emojis to same comment", %{socket: socket, comment: comment} do
+      ref = push(socket, "reaction:add", %{"comment_id" => comment.id, "emoji" => "👍"})
+      assert_reply ref, :ok, %{reaction: r1}
+      assert_broadcast "reaction:added", _b1
+
+      ref = push(socket, "reaction:add", %{"comment_id" => comment.id, "emoji" => "❤️"})
+      assert_reply ref, :ok, %{reaction: r2}
+
+      assert r1.emoji == "👍"
+      assert r2.emoji == "❤️"
+    end
+
+    test "returns error for non-existent comment", %{socket: socket} do
+      fake_comment_id = Ecto.UUID.generate()
+
+      ref = push(socket, "reaction:add", %{"comment_id" => fake_comment_id, "emoji" => "👍"})
+
+      assert_reply ref, :error, %{errors: _errors}
+    end
+
+    test "returns error when emoji is missing", %{socket: socket, comment: comment} do
+      ref = push(socket, "reaction:add", %{"comment_id" => comment.id})
+
+      assert_reply ref, :error, %{errors: errors}
+      assert errors != %{}
+    end
+  end
+
+  describe "handle_in reaction:remove" do
+    setup %{socket: socket, user: user} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Reaction Remove Room", is_public: true})
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+
+      {:ok, comment} =
+        Syncforge.Comments.create_comment(%{
+          body: "Comment for reaction removal",
+          room_id: room.id,
+          user_id: user.id
+        })
+
+      # Pre-add a reaction to remove
+      {:ok, reaction} =
+        Syncforge.Reactions.add_reaction(%{
+          emoji: "👍",
+          comment_id: comment.id,
+          user_id: user.id
+        })
+
+      {:ok, socket: socket, user: user, room: room, comment: comment, reaction: reaction}
+    end
+
+    test "removes reaction and broadcasts removal", %{
+      socket: socket,
+      comment: comment,
+      reaction: reaction
+    } do
+      ref =
+        push(socket, "reaction:remove", %{
+          "comment_id" => comment.id,
+          "emoji" => reaction.emoji
+        })
+
+      assert_reply ref, :ok, %{}
+
+      assert_broadcast "reaction:removed", %{
+        reaction_id: broadcast_reaction_id,
+        comment_id: broadcast_comment_id,
+        emoji: broadcast_emoji
+      }
+
+      assert broadcast_reaction_id == reaction.id
+      assert broadcast_comment_id == comment.id
+      assert broadcast_emoji == "👍"
+
+      # Verify reaction is actually deleted
+      assert Syncforge.Reactions.get_reaction(reaction.id) == nil
+    end
+
+    test "returns error when reaction doesn't exist", %{socket: socket, comment: comment} do
+      ref =
+        push(socket, "reaction:remove", %{
+          "comment_id" => comment.id,
+          "emoji" => "❤️"
+        })
+
+      assert_reply ref, :error, %{reason: :not_found}
+    end
+
+    test "returns error for non-existent comment", %{socket: socket} do
+      fake_comment_id = Ecto.UUID.generate()
+
+      ref = push(socket, "reaction:remove", %{"comment_id" => fake_comment_id, "emoji" => "👍"})
+
+      assert_reply ref, :error, %{reason: :not_found}
+    end
+  end
+
+  describe "handle_in reaction:toggle" do
+    setup %{socket: socket, user: user} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Reaction Toggle Room", is_public: true})
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+
+      {:ok, comment} =
+        Syncforge.Comments.create_comment(%{
+          body: "Comment for reaction toggling",
+          room_id: room.id,
+          user_id: user.id
+        })
+
+      {:ok, socket: socket, user: user, room: room, comment: comment}
+    end
+
+    test "adds reaction when it doesn't exist", %{socket: socket, comment: comment, user: user} do
+      ref = push(socket, "reaction:toggle", %{"comment_id" => comment.id, "emoji" => "👍"})
+
+      assert_reply ref, :ok, %{action: :added, reaction: reaction}
+      assert reaction.emoji == "👍"
+      assert reaction.user_id == user.id
+
+      assert_broadcast "reaction:added", %{reaction: _broadcast}
+    end
+
+    test "removes reaction when it exists", %{socket: socket, comment: comment, user: user} do
+      # First add a reaction
+      {:ok, _existing} =
+        Syncforge.Reactions.add_reaction(%{
+          emoji: "👍",
+          comment_id: comment.id,
+          user_id: user.id
+        })
+
+      ref = push(socket, "reaction:toggle", %{"comment_id" => comment.id, "emoji" => "👍"})
+
+      assert_reply ref, :ok, %{action: :removed}
+
+      assert_broadcast "reaction:removed", %{reaction_id: _id, comment_id: _cid, emoji: "👍"}
+    end
+
+    test "toggling twice returns to original state", %{socket: socket, comment: comment} do
+      # Toggle on
+      ref = push(socket, "reaction:toggle", %{"comment_id" => comment.id, "emoji" => "👍"})
+      assert_reply ref, :ok, %{action: :added, reaction: _added}
+      assert_broadcast "reaction:added", _b1
+
+      # Toggle off
+      ref = push(socket, "reaction:toggle", %{"comment_id" => comment.id, "emoji" => "👍"})
+      assert_reply ref, :ok, %{action: :removed}
+      assert_broadcast "reaction:removed", _b2
+
+      # Verify no reactions exist
+      assert Syncforge.Reactions.list_reactions(comment.id) == []
+    end
+  end
+
+  describe "reactions in room state" do
+    test "receives existing reactions when joining room", %{socket: _socket} do
+      {:ok, room} =
+        Syncforge.Rooms.create_room(%{name: "Reactions State Room", is_public: true})
+
+      existing_user_id = Ecto.UUID.generate()
+
+      {:ok, comment} =
+        Syncforge.Comments.create_comment(%{
+          body: "Comment with reactions",
+          room_id: room.id,
+          user_id: existing_user_id
+        })
+
+      # Add some reactions
+      {:ok, _r1} =
+        Syncforge.Reactions.add_reaction(%{
+          emoji: "👍",
+          comment_id: comment.id,
+          user_id: existing_user_id
+        })
+
+      {:ok, _r2} =
+        Syncforge.Reactions.add_reaction(%{
+          emoji: "❤️",
+          comment_id: comment.id,
+          user_id: Ecto.UUID.generate()
+        })
+
+      # New user joins
+      new_user = %{
+        id: Ecto.UUID.generate(),
+        name: "Reaction Viewer",
+        avatar_url: "https://example.com/viewer.png"
+      }
+
+      {:ok, new_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(new_user)}, connect_info: %{})
+
+      {:ok, _reply, _socket} =
+        subscribe_and_join(new_socket, RoomChannel, "room:#{room.id}")
+
+      # Should receive room_state with comments that have embedded reactions
+      assert_push "room_state", %{comments: comments, room: _room_data}
+      assert length(comments) == 1
+
+      comment_data = hd(comments)
+      assert comment_data.id == comment.id
+
+      # Reactions are embedded in each comment
+      assert comment_data.reactions["👍"] == 1
+      assert comment_data.reactions["❤️"] == 1
+    end
+
+    test "comments without reactions have empty reactions map", %{socket: _socket} do
+      {:ok, room} =
+        Syncforge.Rooms.create_room(%{name: "No Reactions Room", is_public: true})
+
+      existing_user_id = Ecto.UUID.generate()
+
+      {:ok, comment} =
+        Syncforge.Comments.create_comment(%{
+          body: "Comment without reactions",
+          room_id: room.id,
+          user_id: existing_user_id
+        })
+
+      new_user = %{
+        id: Ecto.UUID.generate(),
+        name: "New User",
+        avatar_url: "https://example.com/new.png"
+      }
+
+      {:ok, new_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(new_user)}, connect_info: %{})
+
+      {:ok, _reply, _socket} =
+        subscribe_and_join(new_socket, RoomChannel, "room:#{room.id}")
+
+      assert_push "room_state", %{comments: comments}
+      assert length(comments) == 1
+
+      comment_data = hd(comments)
+      assert comment_data.id == comment.id
+      assert comment_data.reactions == %{}
+    end
+  end
+
   # Helper to generate test tokens
   defp generate_test_token(user) do
     Phoenix.Token.sign(SyncforgeWeb.Endpoint, "user socket", user)

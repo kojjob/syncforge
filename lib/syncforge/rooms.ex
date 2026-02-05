@@ -318,9 +318,20 @@ defmodule Syncforge.Rooms do
       room ->
         comments = Syncforge.Comments.list_comments(room_id)
 
+        # Batch query for all reactions in one query (fixes N+1 problem)
+        comment_ids = Enum.map(comments, & &1.id)
+        reactions_by_comment = Syncforge.Reactions.count_reactions_for_comments(comment_ids)
+
+        # Embed reactions in each comment
+        comments_with_reactions =
+          Enum.map(comments, fn comment ->
+            reactions = Map.get(reactions_by_comment, comment.id, %{})
+            serialize_comment(comment, reactions)
+          end)
+
         %{
           room: serialize_room(room),
-          comments: Enum.map(comments, &serialize_comment/1)
+          comments: comments_with_reactions
         }
     end
   end
@@ -339,8 +350,8 @@ defmodule Syncforge.Rooms do
     }
   end
 
-  # Serialize comment struct for JSON response
-  defp serialize_comment(comment) do
+  # Serialize comment struct for JSON response (with embedded reactions)
+  defp serialize_comment(comment, reactions) do
     %{
       id: comment.id,
       body: comment.body,
@@ -352,7 +363,8 @@ defmodule Syncforge.Rooms do
       room_id: comment.room_id,
       parent_id: comment.parent_id,
       inserted_at: comment.inserted_at,
-      updated_at: comment.updated_at
+      updated_at: comment.updated_at,
+      reactions: reactions
     }
   end
 
