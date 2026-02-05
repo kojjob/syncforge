@@ -21,6 +21,14 @@ export {
   getTextSelection
 } from "./selections.js";
 
+// Connection management SDK
+export {
+  ConnectionState,
+  ConnectionManager,
+  calculateBackoff,
+  createConnectionIndicator
+} from "./connection.js";
+
 // Default exports for convenience
 import CursorManager from "./cursors.js";
 import SelectionManager from "./selections.js";

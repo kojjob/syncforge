@@ -4,6 +4,7 @@
 
 import CursorTracking from "./cursor_tracking.js";
 import SelectionTracking from "./selection_tracking.js";
+import ConnectionStatus from "./connection_status.js";
 
 /**
  * ThemeToggle Hook
@@ -109,7 +110,8 @@ export const Hooks = {
   AnimatedCursors,
   PresencePulse,
   CursorTracking,
-  SelectionTracking
+  SelectionTracking,
+  ConnectionStatus
 };
 
 export default Hooks;
