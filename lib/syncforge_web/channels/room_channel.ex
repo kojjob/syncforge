@@ -23,6 +23,9 @@ defmodule SyncforgeWeb.RoomChannel do
   - `comment:update` - Update an existing comment
   - `comment:delete` - Delete a comment
   - `comment:resolve` - Resolve or unresolve a comment
+  - `reaction:add` - Add an emoji reaction to a comment
+  - `reaction:remove` - Remove an emoji reaction from a comment
+  - `reaction:toggle` - Toggle an emoji reaction (add if missing, remove if exists)
 
   ### Server → Client
   - `cursor:update` - Broadcast cursor positions
@@ -32,6 +35,8 @@ defmodule SyncforgeWeb.RoomChannel do
   - `comment:updated` - Comment was updated
   - `comment:deleted` - Comment was deleted
   - `comment:resolved` - Comment resolution status changed
+  - `reaction:added` - Reaction was added to a comment
+  - `reaction:removed` - Reaction was removed from a comment
   """
 
   use SyncforgeWeb, :channel
@@ -275,6 +280,91 @@ defmodule SyncforgeWeb.RoomChannel do
     end
   end
 
+  # Reaction events for emoji reactions on comments
+
+  @impl true
+  def handle_in("reaction:add", %{"comment_id" => comment_id, "emoji" => emoji}, socket) do
+    user = socket.assigns.current_user
+
+    attrs = %{
+      comment_id: comment_id,
+      user_id: user.id,
+      emoji: emoji
+    }
+
+    case Syncforge.Reactions.add_reaction(attrs) do
+      {:ok, reaction} ->
+        broadcast!(socket, "reaction:added", %{reaction: serialize_reaction(reaction)})
+        {:reply, {:ok, %{reaction: serialize_reaction(reaction)}}, socket}
+
+      {:error, changeset} ->
+        {:reply, {:error, %{errors: format_changeset_errors(changeset)}}, socket}
+    end
+  end
+
+  @impl true
+  def handle_in("reaction:remove", %{"comment_id" => comment_id, "emoji" => emoji}, socket) do
+    user = socket.assigns.current_user
+
+    case Syncforge.Reactions.remove_reaction(comment_id, user.id, emoji) do
+      {:ok, reaction} ->
+        broadcast!(socket, "reaction:removed", %{
+          reaction_id: reaction.id,
+          comment_id: comment_id,
+          user_id: user.id,
+          emoji: emoji
+        })
+
+        {:reply, {:ok, %{}}, socket}
+
+      {:error, :not_found} ->
+        {:reply, {:error, %{reason: :not_found}}, socket}
+    end
+  end
+
+  # Fallback for reaction:add with missing params
+  @impl true
+  def handle_in("reaction:add", _params, socket) do
+    {:reply, {:error, %{errors: %{emoji: ["can't be blank"], comment_id: ["can't be blank"]}}},
+     socket}
+  end
+
+  # Fallback for reaction:remove with missing params
+  @impl true
+  def handle_in("reaction:remove", _params, socket) do
+    {:reply, {:error, %{reason: :missing_params}}, socket}
+  end
+
+  @impl true
+  def handle_in("reaction:toggle", %{"comment_id" => comment_id, "emoji" => emoji}, socket) do
+    user = socket.assigns.current_user
+
+    attrs = %{
+      comment_id: comment_id,
+      user_id: user.id,
+      emoji: emoji
+    }
+
+    case Syncforge.Reactions.toggle_reaction(attrs) do
+      {:ok, :added, reaction} ->
+        broadcast!(socket, "reaction:added", %{reaction: serialize_reaction(reaction)})
+        {:reply, {:ok, %{action: :added, reaction: serialize_reaction(reaction)}}, socket}
+
+      {:ok, :removed, reaction} ->
+        broadcast!(socket, "reaction:removed", %{
+          reaction_id: reaction.id,
+          comment_id: comment_id,
+          user_id: user.id,
+          emoji: emoji
+        })
+
+        {:reply, {:ok, %{action: :removed}}, socket}
+
+      {:error, changeset} ->
+        {:reply, {:error, %{errors: format_changeset_errors(changeset)}}, socket}
+    end
+  end
+
   @impl true
   def terminate(_reason, socket) do
     user = socket.assigns.current_user
@@ -333,5 +423,16 @@ defmodule SyncforgeWeb.RoomChannel do
         opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
       end)
     end)
+  end
+
+  # Serialize a reaction struct for JSON response
+  defp serialize_reaction(reaction) do
+    %{
+      id: reaction.id,
+      emoji: reaction.emoji,
+      comment_id: reaction.comment_id,
+      user_id: reaction.user_id,
+      inserted_at: reaction.inserted_at
+    }
   end
 end

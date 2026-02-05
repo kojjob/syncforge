@@ -50,7 +50,7 @@
 - [x] Element anchoring (anchor_id, position)
 - [x] Real-time comment sync
 - [x] Comment resolution (mark as resolved)
-- [ ] Reactions (emoji)
+- [x] Reactions (emoji)
 
 ### Notifications
 - [ ] Notification schema
@@ -183,9 +183,9 @@
 13. **Client-side Cursor Smoothing** - JavaScript SDK with lerp interpolation and CursorTracking LiveView hook
 14. **Selection Highlighting** - JavaScript SDK with SelectionManager/SelectionRenderer and SelectionTracking LiveView hook
 15. **Reconnection Logic** - JavaScript SDK with ConnectionManager (exponential backoff, state tracking) and ConnectionStatus LiveView hook
+16. **Comment Reactions** - Emoji reactions on comments with toggle support, batch query optimization, and reactions embedded in comment state
 
 ### Up Next
-- Reactions (emoji) for comments
 - Notification schema and real-time delivery
 
 ---
