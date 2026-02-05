@@ -17,7 +17,11 @@ defmodule SyncforgeWeb.Router do
   scope "/", SyncforgeWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    # Landing page (LiveView)
+    live "/", LandingLive, :index
+
+    # Keep home page at /home if needed
+    get "/home", PageController, :home
   end
 
   # Other scopes may use custom stacks.

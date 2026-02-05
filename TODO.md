@@ -28,10 +28,10 @@
 - [ ] Implement reconnection logic (client-side SDK task)
 
 ### Room Management
-- [ ] Create Room schema (Ecto)
-- [ ] Room CRUD operations
-- [ ] Room authorization (token-based)
-- [ ] Room configuration (max participants, metadata)
+- [x] Create Room schema (Ecto)
+- [x] Room CRUD operations
+- [x] Room authorization (capacity + access checks)
+- [x] Room configuration (max participants, metadata)
 - [ ] Room state persistence
 
 ---
@@ -170,12 +170,14 @@
 1. **UserSocket** - WebSocket authentication via Phoenix tokens
 2. **RoomChannel** - Real-time channel with cursor & typing events
 3. **Presence** - User presence tracking with CRDT sync
+4. **Room Schema** - Ecto schema with types, config, and metadata
+5. **Room CRUD** - Full CRUD operations with slug generation
+6. **Room Authorization** - Capacity checks and access control
 
 ### Up Next
-- Room schema and migrations
-- Room authorization middleware
 - Cursor tracking optimization (throttling)
 - Comment system schema
+- Room state persistence
 
 ---
 

@@ -98,11 +98,12 @@ defmodule Syncforge.RoomsTest do
 
   describe "room configuration" do
     test "config can store arbitrary settings" do
-      attrs = Map.put(@valid_attrs, :config, %{
-        "theme" => "dark",
-        "allow_anonymous" => false,
-        "features" => ["cursors", "comments"]
-      })
+      attrs =
+        Map.put(@valid_attrs, :config, %{
+          "theme" => "dark",
+          "allow_anonymous" => false,
+          "features" => ["cursors", "comments"]
+        })
 
       assert {:ok, %Room{} = room} = Rooms.create_room(attrs)
       assert room.config["theme"] == "dark"
@@ -110,10 +111,11 @@ defmodule Syncforge.RoomsTest do
     end
 
     test "metadata can store arbitrary data" do
-      attrs = Map.put(@valid_attrs, :metadata, %{
-        "created_by" => "user_123",
-        "project_id" => "proj_456"
-      })
+      attrs =
+        Map.put(@valid_attrs, :metadata, %{
+          "created_by" => "user_123",
+          "project_id" => "proj_456"
+        })
 
       assert {:ok, %Room{} = room} = Rooms.create_room(attrs)
       assert room.metadata["created_by"] == "user_123"
@@ -139,6 +141,7 @@ defmodule Syncforge.RoomsTest do
 
       # Invalid slugs with spaces or special characters
       assert {:error, changeset} = Rooms.create_room(%{name: "Test 3", slug: "invalid slug"})
+
       assert "must be URL-safe (letters, numbers, hyphens, underscores)" in errors_on(changeset).slug
     end
 
@@ -159,6 +162,52 @@ defmodule Syncforge.RoomsTest do
 
       assert {:error, changeset} = Rooms.create_room(%{name: "Test", type: "invalid_type"})
       assert "is invalid" in errors_on(changeset).type
+    end
+  end
+
+  describe "authorize_join/2" do
+    test "returns error when room does not exist" do
+      fake_id = Ecto.UUID.generate()
+      assert {:error, :room_not_found} = Rooms.authorize_join(fake_id, nil)
+    end
+
+    test "allows joining a public room" do
+      room = room_fixture(%{is_public: true, max_participants: 10})
+      assert {:ok, returned_room} = Rooms.authorize_join(room.id, nil)
+      assert returned_room.id == room.id
+    end
+
+    test "denies joining a private room without access" do
+      room = room_fixture(%{is_public: false})
+      assert {:error, :unauthorized} = Rooms.authorize_join(room.id, nil)
+    end
+
+    test "denies joining when room is at full capacity" do
+      room = room_fixture(%{is_public: true, max_participants: 2})
+      # Simulate room already at capacity
+      opts = [current_participant_count: 2]
+      assert {:error, :room_full} = Rooms.authorize_join(room.id, nil, opts)
+    end
+
+    test "allows joining when room has available space" do
+      room = room_fixture(%{is_public: true, max_participants: 10})
+      # Simulate some participants but not full
+      opts = [current_participant_count: 5]
+      assert {:ok, returned_room} = Rooms.authorize_join(room.id, nil, opts)
+      assert returned_room.id == room.id
+    end
+
+    test "allows joining when room has exactly one spot left" do
+      room = room_fixture(%{is_public: true, max_participants: 5})
+      opts = [current_participant_count: 4]
+      assert {:ok, _room} = Rooms.authorize_join(room.id, nil, opts)
+    end
+
+    test "denies joining when room is over capacity" do
+      room = room_fixture(%{is_public: true, max_participants: 5})
+      # Edge case: somehow count exceeds max
+      opts = [current_participant_count: 10]
+      assert {:error, :room_full} = Rooms.authorize_join(room.id, nil, opts)
     end
   end
 
