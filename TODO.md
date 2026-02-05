@@ -25,7 +25,7 @@
 - [x] Implement Phoenix Presence for user tracking
 - [x] Add presence metadata (name, avatar, status)
 - [x] Handle join/leave events
-- [ ] Implement reconnection logic (client-side SDK task)
+- [x] Implement reconnection logic (client-side SDK task)
 
 ### Room Management
 - [x] Create Room schema (Ecto)
@@ -182,10 +182,11 @@
 12. **Room State Persistence** - Push room state (comments, metadata) to users on join
 13. **Client-side Cursor Smoothing** - JavaScript SDK with lerp interpolation and CursorTracking LiveView hook
 14. **Selection Highlighting** - JavaScript SDK with SelectionManager/SelectionRenderer and SelectionTracking LiveView hook
+15. **Reconnection Logic** - JavaScript SDK with ConnectionManager (exponential backoff, state tracking) and ConnectionStatus LiveView hook
 
 ### Up Next
-- Reconnection logic (client-side SDK)
 - Reactions (emoji) for comments
+- Notification schema and real-time delivery
 
 ---
 
