@@ -84,6 +84,67 @@ defmodule SyncforgeWeb.RoomChannelTest do
       assert payload.x == 50
       assert payload.y == 75
     end
+
+    test "includes user name for cursor label", %{socket: socket, user: user} do
+      room_id = Ecto.UUID.generate()
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+
+      push(socket, "cursor:update", %{"x" => 100, "y" => 200})
+
+      assert_broadcast "cursor:update", payload
+      assert payload.name == user.name
+    end
+
+    test "includes cursor color when user has one", %{socket: _socket} do
+      # Create user with a cursor color
+      user_with_color = %{
+        id: Ecto.UUID.generate(),
+        name: "Colored User",
+        avatar_url: "https://example.com/avatar.png",
+        cursor_color: "#FF5733"
+      }
+
+      {:ok, socket_with_color} =
+        connect(UserSocket, %{"token" => generate_test_token(user_with_color)}, connect_info: %{})
+
+      room_id = Ecto.UUID.generate()
+
+      {:ok, _reply, socket_with_color} =
+        subscribe_and_join(socket_with_color, RoomChannel, "room:#{room_id}")
+
+      push(socket_with_color, "cursor:update", %{"x" => 100, "y" => 200})
+
+      assert_broadcast "cursor:update", payload
+      assert payload.color == "#FF5733"
+    end
+
+    test "uses default color when user has no cursor_color", %{socket: socket} do
+      room_id = Ecto.UUID.generate()
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+
+      push(socket, "cursor:update", %{"x" => 100, "y" => 200})
+
+      assert_broadcast "cursor:update", payload
+      # Should have a default color
+      assert is_binary(payload.color)
+      assert String.starts_with?(payload.color, "#")
+    end
+
+    test "includes optional element_id when provided", %{socket: socket} do
+      room_id = Ecto.UUID.generate()
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+
+      push(socket, "cursor:update", %{"x" => 100, "y" => 200, "element_id" => "editor-panel"})
+
+      assert_broadcast "cursor:update", payload
+      assert payload.element_id == "editor-panel"
+    end
   end
 
   describe "handle_in presence:update" do

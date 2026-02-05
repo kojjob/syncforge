@@ -41,7 +41,7 @@
 ### Live Cursors
 - [x] Cursor position tracking
 - [x] Cursor broadcast optimization (throttling)
-- [ ] Cursor labels (user name display)
+- [x] Cursor labels (user name + color display)
 - [ ] Client-side cursor smoothing
 - [ ] Selection highlighting
 
@@ -177,11 +177,12 @@
 7. **Cursor Throttling** - Rate-limited cursor broadcasts at ~60fps via Agent GenServer
 8. **Comment Schema** - Threaded comments with anchoring, resolution, and cascade delete
 9. **CI Pipeline** - GitHub Actions for tests and format checking on PRs
+10. **Cursor Labels** - User name and deterministic color in cursor broadcasts
 
 ### Up Next
-- Cursor labels (user name display)
 - Real-time comment sync (channel integration)
 - Room state persistence
+- Client-side cursor smoothing
 
 ---
 

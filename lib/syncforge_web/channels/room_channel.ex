@@ -71,13 +71,30 @@ defmodule SyncforgeWeb.RoomChannel do
     {:noreply, socket}
   end
 
+  # Default cursor colors for users without a custom color
+  @default_cursor_colors [
+    "#3B82F6",
+    "#EF4444",
+    "#10B981",
+    "#F59E0B",
+    "#8B5CF6",
+    "#EC4899",
+    "#06B6D4",
+    "#F97316"
+  ]
+
   @impl true
   def handle_in("cursor:update", %{"x" => x, "y" => y} = params, socket) do
     user = socket.assigns.current_user
 
-    # Build cursor payload, optionally including element_id
+    # Determine cursor color - use user's custom color or generate a default based on user_id
+    cursor_color = get_cursor_color(user)
+
+    # Build cursor payload with name and color for cursor labels
     payload = %{
       user_id: user.id,
+      name: user.name,
+      color: cursor_color,
       x: x,
       y: y,
       timestamp: System.system_time(:millisecond)
@@ -162,4 +179,19 @@ defmodule SyncforgeWeb.RoomChannel do
 
   defp maybe_update(map, _key, nil), do: map
   defp maybe_update(map, key, value), do: Map.put(map, key, value)
+
+  # Get cursor color - use user's custom color or generate a deterministic default
+  defp get_cursor_color(user) do
+    case Map.get(user, :cursor_color) do
+      nil -> default_color_for_user(user.id)
+      color -> color
+    end
+  end
+
+  # Generate a deterministic default color based on user_id
+  defp default_color_for_user(user_id) do
+    # Use hash of user_id to deterministically pick a color
+    index = :erlang.phash2(user_id, length(@default_cursor_colors))
+    Enum.at(@default_cursor_colors, index)
+  end
 end
