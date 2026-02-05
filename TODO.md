@@ -43,7 +43,7 @@
 - [x] Cursor broadcast optimization (throttling)
 - [x] Cursor labels (user name + color display)
 - [x] Client-side cursor smoothing
-- [ ] Selection highlighting
+- [x] Selection highlighting
 
 ### Threaded Comments
 - [x] Comment schema with threading (parent_id)
@@ -181,10 +181,11 @@
 11. **Real-time Comment Sync** - Channel handlers for comment CRUD with broadcasts
 12. **Room State Persistence** - Push room state (comments, metadata) to users on join
 13. **Client-side Cursor Smoothing** - JavaScript SDK with lerp interpolation and CursorTracking LiveView hook
+14. **Selection Highlighting** - JavaScript SDK with SelectionManager/SelectionRenderer and SelectionTracking LiveView hook
 
 ### Up Next
-- Selection highlighting
 - Reconnection logic (client-side SDK)
+- Reactions (emoji) for comments
 
 ---
 

@@ -13,6 +13,16 @@ export {
   createCursorElement
 } from "./cursors.js";
 
-// Default export for convenience
+// Selection highlighting SDK
+export {
+  SelectionManager,
+  SelectionRenderer,
+  createSelectionHighlight,
+  getTextSelection
+} from "./selections.js";
+
+// Default exports for convenience
 import CursorManager from "./cursors.js";
+import SelectionManager from "./selections.js";
 export default CursorManager;
+export { SelectionManager as Selections };

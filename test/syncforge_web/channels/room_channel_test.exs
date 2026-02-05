@@ -465,6 +465,101 @@ defmodule SyncforgeWeb.RoomChannelTest do
     end
   end
 
+  describe "handle_in selection:update" do
+    test "broadcasts selection to other clients", %{socket: socket} do
+      room_id = Ecto.UUID.generate()
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+
+      selection = %{
+        "start" => %{"offset" => 0, "path" => [0, 0]},
+        "end" => %{"offset" => 10, "path" => [0, 0]}
+      }
+
+      push(socket, "selection:update", %{"selection" => selection})
+
+      assert_broadcast "selection:update", %{selection: broadcast_selection}
+      assert broadcast_selection == selection
+    end
+
+    test "includes user_id in selection broadcast", %{socket: socket, user: user} do
+      room_id = Ecto.UUID.generate()
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+
+      selection = %{"text" => "selected text"}
+
+      push(socket, "selection:update", %{"selection" => selection})
+
+      assert_broadcast "selection:update", payload
+      assert payload.user_id == user.id
+    end
+
+    test "includes element_id when provided", %{socket: socket} do
+      room_id = Ecto.UUID.generate()
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+
+      push(socket, "selection:update", %{
+        "selection" => %{"text" => "test"},
+        "element_id" => "editor-main"
+      })
+
+      assert_broadcast "selection:update", payload
+      assert payload.element_id == "editor-main"
+    end
+
+    test "clears selection when selection is nil", %{socket: socket} do
+      room_id = Ecto.UUID.generate()
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+
+      push(socket, "selection:update", %{"selection" => nil})
+
+      assert_broadcast "selection:update", payload
+      assert payload.selection == nil
+    end
+
+    test "includes timestamp in broadcast", %{socket: socket} do
+      room_id = Ecto.UUID.generate()
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room_id}")
+
+      push(socket, "selection:update", %{"selection" => %{"text" => "test"}})
+
+      assert_broadcast "selection:update", payload
+      assert is_integer(payload.timestamp)
+    end
+
+    test "includes user color for selection highlighting", %{socket: _socket} do
+      user_with_color = %{
+        id: Ecto.UUID.generate(),
+        name: "Selection User",
+        avatar_url: "https://example.com/avatar.png",
+        cursor_color: "#FF5733"
+      }
+
+      {:ok, socket_with_color} =
+        connect(UserSocket, %{"token" => generate_test_token(user_with_color)}, connect_info: %{})
+
+      room_id = Ecto.UUID.generate()
+
+      {:ok, _reply, socket_with_color} =
+        subscribe_and_join(socket_with_color, RoomChannel, "room:#{room_id}")
+
+      push(socket_with_color, "selection:update", %{"selection" => %{"text" => "test"}})
+
+      assert_broadcast "selection:update", payload
+      assert payload.color == "#FF5733"
+      assert payload.name == "Selection User"
+    end
+  end
+
   describe "handle_in comment:resolve" do
     setup %{socket: socket, user: user} do
       {:ok, room} = Syncforge.Rooms.create_room(%{name: "Test Room", is_public: true})

@@ -149,9 +149,14 @@ defmodule SyncforgeWeb.RoomChannel do
   def handle_in("selection:update", params, socket) do
     user = socket.assigns.current_user
 
+    # Get user color for selection highlighting (same as cursor color)
+    selection_color = get_cursor_color(user)
+
     # Broadcast selection to other users
     broadcast_from!(socket, "selection:update", %{
       user_id: user.id,
+      name: user.name,
+      color: selection_color,
       selection: params["selection"],
       element_id: params["element_id"],
       timestamp: System.system_time(:millisecond)
