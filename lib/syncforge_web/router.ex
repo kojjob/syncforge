@@ -24,10 +24,20 @@ defmodule SyncforgeWeb.Router do
     get "/home", PageController, :home
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", SyncforgeWeb do
-  #   pipe_through :api
-  # end
+  # Public auth endpoints (no authentication required)
+  scope "/api", SyncforgeWeb do
+    pipe_through :api
+
+    post "/register", AuthController, :register
+    post "/login", AuthController, :login
+  end
+
+  # Protected API endpoints (Bearer token required)
+  scope "/api", SyncforgeWeb do
+    pipe_through [:api, SyncforgeWeb.Plugs.RequireAuth]
+
+    get "/me", AuthController, :me
+  end
 
   # Enable Swoosh mailbox preview in development
   if Application.compile_env(:syncforge, :dev_routes) do
