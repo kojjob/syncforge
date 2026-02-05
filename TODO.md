@@ -53,10 +53,10 @@
 - [x] Reactions (emoji)
 
 ### Notifications
-- [ ] Notification schema
+- [x] Notification schema
 - [ ] Real-time notification delivery
 - [ ] Notification preferences
-- [ ] Read/unread status
+- [x] Read/unread status
 - [ ] Activity feed
 
 ---
@@ -184,9 +184,11 @@
 14. **Selection Highlighting** - JavaScript SDK with SelectionManager/SelectionRenderer and SelectionTracking LiveView hook
 15. **Reconnection Logic** - JavaScript SDK with ConnectionManager (exponential backoff, state tracking) and ConnectionStatus LiveView hook
 16. **Comment Reactions** - Emoji reactions on comments with toggle support, batch query optimization, and reactions embedded in comment state
+17. **Notifications Context** - Notification schema with 6 types (mention, reply, resolved, reaction, invite, joined), CRUD operations, read/unread tracking, pagination, and cleanup
 
 ### Up Next
-- Notification schema and real-time delivery
+- Real-time notification delivery via Phoenix Channels
+- Notification preferences (per-user settings)
 
 ---
 
