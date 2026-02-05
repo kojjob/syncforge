@@ -902,6 +902,316 @@ defmodule SyncforgeWeb.RoomChannelTest do
     end
   end
 
+  describe "activity feed on join" do
+    test "receives recent activities when joining room", %{socket: _socket} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Activity Room", is_public: true})
+
+      actor_id = Ecto.UUID.generate()
+
+      # Create some activities
+      {:ok, _a1} =
+        Syncforge.Activity.create_activity(%{
+          type: "user_joined",
+          room_id: room.id,
+          actor_id: actor_id,
+          payload: %{"name" => "Alice"}
+        })
+
+      {:ok, _a2} =
+        Syncforge.Activity.create_activity(%{
+          type: "comment_created",
+          room_id: room.id,
+          actor_id: actor_id,
+          subject_id: Ecto.UUID.generate(),
+          subject_type: "comment",
+          payload: %{"body_preview" => "Test comment..."}
+        })
+
+      # New user joins
+      new_user = %{
+        id: Ecto.UUID.generate(),
+        name: "Activity Viewer",
+        avatar_url: "https://example.com/viewer.png"
+      }
+
+      {:ok, new_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(new_user)}, connect_info: %{})
+
+      {:ok, _reply, _socket} =
+        subscribe_and_join(new_socket, RoomChannel, "room:#{room.id}")
+
+      # Should receive room_state with activities
+      assert_push "room_state", %{activities: activities}
+      assert length(activities) == 2
+    end
+
+    test "room state includes empty activities list for new room", %{socket: _socket} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Empty Activity Room", is_public: true})
+
+      new_user = %{
+        id: Ecto.UUID.generate(),
+        name: "Solo User",
+        avatar_url: "https://example.com/solo.png"
+      }
+
+      {:ok, new_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(new_user)}, connect_info: %{})
+
+      {:ok, _reply, _socket} =
+        subscribe_and_join(new_socket, RoomChannel, "room:#{room.id}")
+
+      # Should receive room_state with empty activities
+      assert_push "room_state", %{activities: activities}
+      assert activities == []
+    end
+
+    test "activities are limited to most recent 50", %{socket: _socket} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Many Activities Room", is_public: true})
+
+      actor_id = Ecto.UUID.generate()
+
+      # Create 60 activities
+      for i <- 1..60 do
+        {:ok, _} =
+          Syncforge.Activity.create_activity(%{
+            type: "comment_created",
+            room_id: room.id,
+            actor_id: actor_id,
+            payload: %{"index" => i}
+          })
+
+        Process.sleep(1)
+      end
+
+      new_user = %{
+        id: Ecto.UUID.generate(),
+        name: "Activity Viewer",
+        avatar_url: "https://example.com/viewer.png"
+      }
+
+      {:ok, new_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(new_user)}, connect_info: %{})
+
+      {:ok, _reply, _socket} =
+        subscribe_and_join(new_socket, RoomChannel, "room:#{room.id}")
+
+      # Should receive only the 50 most recent activities
+      assert_push "room_state", %{activities: activities}
+      assert length(activities) == 50
+    end
+  end
+
+  describe "handle_in activity:list" do
+    setup %{socket: socket, user: _user} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Activity List Room", is_public: true})
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+
+      actor_id = Ecto.UUID.generate()
+
+      # Create 15 activities
+      for i <- 1..15 do
+        {:ok, _} =
+          Syncforge.Activity.create_activity(%{
+            type: "comment_created",
+            room_id: room.id,
+            actor_id: actor_id,
+            payload: %{"index" => i}
+          })
+
+        Process.sleep(5)
+      end
+
+      {:ok, socket: socket, room: room}
+    end
+
+    test "returns paginated activities", %{socket: socket} do
+      ref = push(socket, "activity:list", %{"limit" => 5})
+
+      assert_reply ref, :ok, %{activities: activities}
+      assert length(activities) == 5
+    end
+
+    test "supports offset for pagination", %{socket: socket} do
+      ref1 = push(socket, "activity:list", %{"limit" => 5, "offset" => 0})
+      assert_reply ref1, :ok, %{activities: first_page}
+
+      ref2 = push(socket, "activity:list", %{"limit" => 5, "offset" => 5})
+      assert_reply ref2, :ok, %{activities: second_page}
+
+      first_ids = Enum.map(first_page, & &1.id)
+      second_ids = Enum.map(second_page, & &1.id)
+
+      # Pages should be different
+      assert Enum.all?(second_ids, fn id -> id not in first_ids end)
+    end
+
+    test "returns all activities when no limit specified", %{socket: socket} do
+      ref = push(socket, "activity:list", %{})
+
+      assert_reply ref, :ok, %{activities: activities}
+      assert length(activities) == 15
+    end
+  end
+
+  describe "activity creation on comment events" do
+    setup %{socket: socket, user: user} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Comment Activity Room", is_public: true})
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+
+      {:ok, socket: socket, user: user, room: room}
+    end
+
+    test "creates activity when comment is created", %{socket: socket, room: room} do
+      comment_attrs = %{
+        "body" => "This is a test comment",
+        "anchor_id" => "element-123"
+      }
+
+      ref = push(socket, "comment:create", comment_attrs)
+      assert_reply ref, :ok, %{comment: _comment}
+
+      # Clear the comment:created broadcast
+      assert_broadcast "comment:created", _broadcast
+
+      # Verify activity was created
+      activities = Syncforge.Activity.list_room_activities(room.id)
+      assert length(activities) == 1
+
+      activity = hd(activities)
+      assert activity.type == "comment_created"
+      assert activity.room_id == room.id
+    end
+
+    test "creates activity when comment is resolved", %{socket: socket, user: user, room: room} do
+      # Create a comment first
+      {:ok, comment} =
+        Syncforge.Comments.create_comment(%{
+          body: "Comment to resolve",
+          room_id: room.id,
+          user_id: user.id
+        })
+
+      ref = push(socket, "comment:resolve", %{"id" => comment.id, "resolved" => true})
+      assert_reply ref, :ok, _reply
+
+      # Clear the broadcast
+      assert_broadcast "comment:resolved", _broadcast
+
+      # Verify activity was created
+      activities = Syncforge.Activity.list_room_activities(room.id)
+      assert Enum.any?(activities, fn a -> a.type == "comment_resolved" end)
+    end
+
+    test "creates activity when comment is deleted", %{socket: socket, user: user, room: room} do
+      # Create a comment first
+      {:ok, comment} =
+        Syncforge.Comments.create_comment(%{
+          body: "Comment to delete",
+          room_id: room.id,
+          user_id: user.id
+        })
+
+      ref = push(socket, "comment:delete", %{"id" => comment.id})
+      assert_reply ref, :ok, _reply
+
+      # Clear the broadcast
+      assert_broadcast "comment:deleted", _broadcast
+
+      # Verify activity was created
+      activities = Syncforge.Activity.list_room_activities(room.id)
+      assert Enum.any?(activities, fn a -> a.type == "comment_deleted" end)
+    end
+  end
+
+  describe "activity creation on reaction events" do
+    setup %{socket: socket, user: user} do
+      {:ok, room} =
+        Syncforge.Rooms.create_room(%{name: "Reaction Activity Room", is_public: true})
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+
+      {:ok, comment} =
+        Syncforge.Comments.create_comment(%{
+          body: "Comment for reactions",
+          room_id: room.id,
+          user_id: user.id
+        })
+
+      {:ok, socket: socket, user: user, room: room, comment: comment}
+    end
+
+    test "creates activity when reaction is added", %{
+      socket: socket,
+      room: room,
+      comment: comment
+    } do
+      ref = push(socket, "reaction:add", %{"comment_id" => comment.id, "emoji" => "👍"})
+      assert_reply ref, :ok, _reply
+
+      # Clear the broadcast
+      assert_broadcast "reaction:added", _broadcast
+
+      # Verify activity was created
+      activities = Syncforge.Activity.list_room_activities(room.id)
+      assert Enum.any?(activities, fn a -> a.type == "reaction_added" end)
+
+      activity = Enum.find(activities, fn a -> a.type == "reaction_added" end)
+      assert activity.payload["emoji"] == "👍"
+    end
+
+    test "creates activity when reaction is removed", %{
+      socket: socket,
+      user: user,
+      room: room,
+      comment: comment
+    } do
+      # First add a reaction
+      {:ok, _reaction} =
+        Syncforge.Reactions.add_reaction(%{
+          emoji: "👍",
+          comment_id: comment.id,
+          user_id: user.id
+        })
+
+      ref = push(socket, "reaction:remove", %{"comment_id" => comment.id, "emoji" => "👍"})
+      assert_reply ref, :ok, _reply
+
+      # Clear the broadcast
+      assert_broadcast "reaction:removed", _broadcast
+
+      # Verify activity was created
+      activities = Syncforge.Activity.list_room_activities(room.id)
+      assert Enum.any?(activities, fn a -> a.type == "reaction_removed" end)
+    end
+  end
+
+  describe "activity broadcast" do
+    setup %{socket: socket, user: _user} do
+      {:ok, room} = Syncforge.Rooms.create_room(%{name: "Broadcast Room", is_public: true})
+
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+
+      {:ok, socket: socket, room: room}
+    end
+
+    test "broadcasts activity:created when comment is created", %{socket: socket} do
+      comment_attrs = %{"body" => "Broadcast test comment"}
+
+      _ref = push(socket, "comment:create", comment_attrs)
+
+      # Should receive both comment:created and activity:created
+      assert_broadcast "comment:created", _comment_broadcast
+      assert_broadcast "activity:created", %{activity: activity}
+      assert activity.type == "comment_created"
+    end
+  end
+
   # Helper to generate test tokens
   defp generate_test_token(user) do
     Phoenix.Token.sign(SyncforgeWeb.Endpoint, "user socket", user)
