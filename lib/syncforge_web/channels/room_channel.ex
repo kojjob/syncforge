@@ -27,6 +27,7 @@ defmodule SyncforgeWeb.RoomChannel do
 
   use SyncforgeWeb, :channel
 
+  alias Syncforge.Cursors.Throttler
   alias SyncforgeWeb.Presence
 
   require Logger
@@ -86,28 +87,32 @@ defmodule SyncforgeWeb.RoomChannel do
   @impl true
   def handle_in("cursor:update", %{"x" => x, "y" => y} = params, socket) do
     user = socket.assigns.current_user
+    room_id = socket.assigns.room_id
 
-    # Determine cursor color - use user's custom color or generate a default based on user_id
-    cursor_color = get_cursor_color(user)
+    # Only broadcast if throttle allows (prevents flooding at high cursor rates)
+    if Throttler.should_broadcast?(room_id, user.id) do
+      # Determine cursor color - use user's custom color or generate a default based on user_id
+      cursor_color = get_cursor_color(user)
 
-    # Build cursor payload with name and color for cursor labels
-    payload = %{
-      user_id: user.id,
-      name: user.name,
-      color: cursor_color,
-      x: x,
-      y: y,
-      timestamp: System.system_time(:millisecond)
-    }
+      # Build cursor payload with name and color for cursor labels
+      payload = %{
+        user_id: user.id,
+        name: user.name,
+        color: cursor_color,
+        x: x,
+        y: y,
+        timestamp: System.system_time(:millisecond)
+      }
 
-    payload =
-      case params do
-        %{"element_id" => element_id} -> Map.put(payload, :element_id, element_id)
-        _ -> payload
-      end
+      payload =
+        case params do
+          %{"element_id" => element_id} -> Map.put(payload, :element_id, element_id)
+          _ -> payload
+        end
 
-    # Broadcast cursor position to all OTHER users in the room
-    broadcast_from!(socket, "cursor:update", payload)
+      # Broadcast cursor position to all OTHER users in the room
+      broadcast_from!(socket, "cursor:update", payload)
+    end
 
     {:noreply, socket}
   end
@@ -168,6 +173,9 @@ defmodule SyncforgeWeb.RoomChannel do
   def terminate(_reason, socket) do
     user = socket.assigns.current_user
     room_id = socket.assigns.room_id
+
+    # Cleanup cursor throttle tracking for this user
+    Throttler.cleanup(room_id, user.id)
 
     Logger.info("User #{user.id} left room #{room_id}")
 
