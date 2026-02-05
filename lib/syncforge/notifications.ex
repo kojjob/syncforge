@@ -10,6 +10,7 @@ defmodule Syncforge.Notifications do
 
   alias Syncforge.Repo
   alias Syncforge.Notifications.Notification
+  alias Syncforge.Notifications.NotificationPreference
 
   @doc """
   Creates a notification with the given attributes.
@@ -209,5 +210,127 @@ defmodule Syncforge.Notifications do
       where: n.inserted_at < ^cutoff_date
     )
     |> Repo.delete_all()
+  end
+
+  # ============================================
+  # Notification Preferences
+  # ============================================
+
+  @doc """
+  Gets notification preferences for a user.
+
+  Returns `nil` if the user has no preferences set.
+
+  ## Examples
+
+      iex> get_preferences("valid-user-id")
+      %NotificationPreference{}
+
+      iex> get_preferences("non-existent-user-id")
+      nil
+  """
+  def get_preferences(user_id) do
+    Repo.get_by(NotificationPreference, user_id: user_id)
+  end
+
+  @doc """
+  Gets or creates notification preferences for a user.
+
+  If the user has no preferences, creates default preferences with all
+  notification types enabled.
+
+  ## Examples
+
+      iex> get_or_create_preferences("user-id")
+      {:ok, %NotificationPreference{}}
+  """
+  def get_or_create_preferences(user_id) do
+    case get_preferences(user_id) do
+      nil ->
+        %NotificationPreference{}
+        |> NotificationPreference.changeset(%{user_id: user_id})
+        |> Repo.insert()
+
+      preferences ->
+        {:ok, preferences}
+    end
+  end
+
+  @doc """
+  Updates notification preferences.
+
+  ## Examples
+
+      iex> update_preferences(preference, %{comment_mention: false})
+      {:ok, %NotificationPreference{comment_mention: false}}
+  """
+  def update_preferences(%NotificationPreference{} = preference, attrs) do
+    preference
+    |> NotificationPreference.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Checks if a user should receive a notification of the given type.
+
+  Returns `true` if:
+  - The user has no preferences (defaults to enabled)
+  - The preference for this notification type is enabled
+  - The notification type is unknown (fail-open)
+
+  Returns `false` if the user has explicitly disabled notifications
+  of this type.
+
+  ## Examples
+
+      iex> should_notify?("user-id", "comment_mention")
+      true
+
+      iex> should_notify?("user-id", "comment_mention") # after disabling
+      false
+  """
+  def should_notify?(user_id, notification_type) do
+    case get_preferences(user_id) do
+      nil ->
+        # No preferences = all enabled (defaults)
+        true
+
+      preferences ->
+        field = NotificationPreference.type_to_field(notification_type)
+
+        if field do
+          Map.get(preferences, field, true)
+        else
+          # Unknown notification type, fail-open
+          true
+        end
+    end
+  end
+
+  @doc """
+  Creates a notification only if the user's preferences allow it.
+
+  Returns `{:ok, notification}` if created successfully.
+  Returns `{:skipped, :preference_disabled}` if the user has disabled
+  notifications of this type.
+  Returns `{:error, changeset}` if validation fails.
+
+  ## Examples
+
+      iex> create_notification_with_preferences(%{type: "comment_mention", user_id: "uuid"})
+      {:ok, %Notification{}}
+
+      iex> create_notification_with_preferences(%{type: "comment_mention", user_id: "uuid"})
+      {:skipped, :preference_disabled}  # if user disabled this type
+  """
+  def create_notification_with_preferences(attrs) do
+    user_id = attrs[:user_id] || attrs["user_id"]
+    notification_type = attrs[:type] || attrs["type"]
+
+    if should_notify?(user_id, notification_type) do
+      create_notification(attrs)
+    else
+      {:skipped, :preference_disabled}
+    end
   end
 end
