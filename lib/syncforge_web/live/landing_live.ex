@@ -114,68 +114,72 @@ defmodule SyncforgeWeb.LandingLive do
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
 
         /* CSS Variables */
-        :root {
+        :root, .landing-page, [data-theme="light"] {
           --font-display: 'Instrument Serif', Georgia, serif;
           --font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
           --font-mono: ui-monospace, 'SF Mono', Monaco, monospace;
 
-          /* Light theme (default) */
-          --bg-primary: #FAFAF9;
-          --bg-secondary: #F5F5F4;
+          /* Light theme (default) - high contrast */
+          --bg-primary: #FFFFFF;
+          --bg-secondary: #F5F5F5;
           --bg-elevated: #FFFFFF;
-          --text-primary: #1C1917;
-          --text-secondary: #57534E;
-          --text-tertiary: #A8A29E;
-          --border: #E7E5E4;
-          --border-subtle: #F5F5F4;
-          --accent: #00D4AA;
-          --accent-hover: #00B894;
-          --accent-soft: rgba(0, 212, 170, 0.1);
+          --bg-nav: rgba(255, 255, 255, 0.85);
+          --text-primary: #0F172A;
+          --text-secondary: #334155;
+          --text-tertiary: #64748B;
+          --border: #CBD5E1;
+          --border-subtle: #E2E8F0;
+          --accent: #047857;
+          --accent-hover: #065F46;
+          --accent-soft: rgba(4, 120, 87, 0.12);
           --cta: #7C3AED;
           --cta-hover: #6D28D9;
-          --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-          --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
-          --shadow-lg: 0 12px 40px rgba(0,0,0,0.08);
+          --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+          --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+          --shadow-lg: 0 12px 40px rgba(0,0,0,0.2);
         }
 
-        [data-theme="dark"],
-        [data-theme="system"]:has(@media (prefers-color-scheme: dark)) {
-          --bg-primary: #0A0A0B;
-          --bg-secondary: #141416;
-          --bg-elevated: #1C1C1F;
-          --text-primary: #FAFAF9;
+        /* Dark theme - applied via data attribute */
+        [data-theme="dark"] {
+          --bg-primary: #09090B;
+          --bg-secondary: #18181B;
+          --bg-elevated: #27272A;
+          --bg-nav: rgba(9, 9, 11, 0.85);
+          --text-primary: #FAFAFA;
           --text-secondary: #A1A1AA;
           --text-tertiary: #71717A;
-          --border: #27272A;
-          --border-subtle: #1C1C1F;
-          --accent: #00D4AA;
-          --accent-hover: #00E6B8;
-          --accent-soft: rgba(0, 212, 170, 0.15);
+          --border: #3F3F46;
+          --border-subtle: #27272A;
+          --accent: #10B981;
+          --accent-hover: #34D399;
+          --accent-soft: rgba(16, 185, 129, 0.15);
           --cta: #A78BFA;
           --cta-hover: #C4B5FD;
-          --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
-          --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
-          --shadow-lg: 0 12px 40px rgba(0,0,0,0.4);
+          --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+          --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+          --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
         }
 
+        /* System preference detection - only when no explicit theme is set */
         @media (prefers-color-scheme: dark) {
-          [data-theme="system"] {
-            --bg-primary: #0A0A0B;
-            --bg-secondary: #141416;
-            --bg-elevated: #1C1C1F;
-            --text-primary: #FAFAF9;
+          :root:not([data-theme="light"]):not([data-theme="dark"]) {
+            --bg-primary: #09090B;
+            --bg-secondary: #18181B;
+            --bg-elevated: #27272A;
+            --bg-nav: rgba(9, 9, 11, 0.85);
+            --text-primary: #FAFAFA;
             --text-secondary: #A1A1AA;
             --text-tertiary: #71717A;
-            --border: #27272A;
-            --border-subtle: #1C1C1F;
-            --accent: #00D4AA;
-            --accent-hover: #00E6B8;
-            --accent-soft: rgba(0, 212, 170, 0.15);
+            --border: #3F3F46;
+            --border-subtle: #27272A;
+            --accent: #10B981;
+            --accent-hover: #34D399;
+            --accent-soft: rgba(16, 185, 129, 0.15);
             --cta: #A78BFA;
             --cta-hover: #C4B5FD;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
-            --shadow-lg: 0 12px 40px rgba(0,0,0,0.4);
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+            --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
           }
         }
 
@@ -245,7 +249,7 @@ defmodule SyncforgeWeb.LandingLive do
           left: 0;
           right: 0;
           z-index: 100;
-          background: rgba(var(--bg-primary), 0.8);
+          background: var(--bg-nav);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
           border-bottom: 1px solid var(--border-subtle);
@@ -667,12 +671,13 @@ defmodule SyncforgeWeb.LandingLive do
           border-radius: 16px;
           padding: 2rem;
           transition: all 0.3s ease;
+          box-shadow: var(--shadow-sm);
         }
 
         .feature-card:hover {
           border-color: var(--accent);
           transform: translateY(-4px);
-          box-shadow: var(--shadow-md);
+          box-shadow: var(--shadow-lg);
         }
 
         .feature-icon {
@@ -845,11 +850,12 @@ defmodule SyncforgeWeb.LandingLive do
           display: flex;
           flex-direction: column;
           transition: all 0.3s ease;
+          box-shadow: var(--shadow-sm);
         }
 
         .pricing-card:hover {
           transform: translateY(-4px);
-          box-shadow: var(--shadow-md);
+          box-shadow: var(--shadow-lg);
         }
 
         .pricing-card.featured {
