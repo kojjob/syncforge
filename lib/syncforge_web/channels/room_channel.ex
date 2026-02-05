@@ -6,6 +6,7 @@ defmodule SyncforgeWeb.RoomChannel do
   - User presence tracking (who's in the room)
   - Live cursor positions
   - Real-time events (typing, selections, etc.)
+  - Threaded comments with anchoring
   - Document sync (future: CRDT via Yjs)
 
   ## Topic Format
@@ -18,11 +19,19 @@ defmodule SyncforgeWeb.RoomChannel do
   - `cursor:update` - Update cursor position
   - `presence:update` - Update presence metadata (status, etc.)
   - `selection:update` - Update text/element selection
+  - `comment:create` - Create a new comment
+  - `comment:update` - Update an existing comment
+  - `comment:delete` - Delete a comment
+  - `comment:resolve` - Resolve or unresolve a comment
 
   ### Server → Client
   - `cursor:update` - Broadcast cursor positions
   - `presence_state` - Initial presence state on join
   - `presence_diff` - Presence changes (joins/leaves)
+  - `comment:created` - New comment was created
+  - `comment:updated` - Comment was updated
+  - `comment:deleted` - Comment was deleted
+  - `comment:resolved` - Comment resolution status changed
   """
 
   use SyncforgeWeb, :channel
@@ -169,6 +178,94 @@ defmodule SyncforgeWeb.RoomChannel do
     {:noreply, socket}
   end
 
+  # Comment events for real-time comment sync
+
+  @impl true
+  def handle_in("comment:create", params, socket) do
+    user = socket.assigns.current_user
+    room_id = socket.assigns.room_id
+
+    # Build comment attributes with room and user from socket context
+    attrs =
+      params
+      |> Map.put("room_id", room_id)
+      |> Map.put("user_id", user.id)
+
+    case Syncforge.Comments.create_comment(attrs) do
+      {:ok, comment} ->
+        # Broadcast the new comment to all room members
+        broadcast!(socket, "comment:created", %{comment: serialize_comment(comment)})
+        {:reply, {:ok, %{comment: serialize_comment(comment)}}, socket}
+
+      {:error, changeset} ->
+        {:reply, {:error, %{errors: format_changeset_errors(changeset)}}, socket}
+    end
+  end
+
+  @impl true
+  def handle_in("comment:update", %{"id" => comment_id} = params, socket) do
+    case Syncforge.Comments.get_comment(comment_id) do
+      nil ->
+        {:reply, {:error, %{reason: :not_found}}, socket}
+
+      comment ->
+        # Only allow updating certain fields
+        update_attrs = Map.take(params, ["body", "anchor_id", "anchor_type", "position"])
+
+        case Syncforge.Comments.update_comment(comment, update_attrs) do
+          {:ok, updated} ->
+            broadcast!(socket, "comment:updated", %{comment: serialize_comment(updated)})
+            {:reply, {:ok, %{comment: serialize_comment(updated)}}, socket}
+
+          {:error, changeset} ->
+            {:reply, {:error, %{errors: format_changeset_errors(changeset)}}, socket}
+        end
+    end
+  end
+
+  @impl true
+  def handle_in("comment:delete", %{"id" => comment_id}, socket) do
+    case Syncforge.Comments.get_comment(comment_id) do
+      nil ->
+        {:reply, {:error, %{reason: :not_found}}, socket}
+
+      comment ->
+        case Syncforge.Comments.delete_comment(comment) do
+          {:ok, _deleted} ->
+            broadcast!(socket, "comment:deleted", %{comment_id: comment_id})
+            {:reply, {:ok, %{}}, socket}
+
+          {:error, _changeset} ->
+            {:reply, {:error, %{reason: :delete_failed}}, socket}
+        end
+    end
+  end
+
+  @impl true
+  def handle_in("comment:resolve", %{"id" => comment_id, "resolved" => resolved}, socket) do
+    case Syncforge.Comments.get_comment(comment_id) do
+      nil ->
+        {:reply, {:error, %{reason: :not_found}}, socket}
+
+      comment ->
+        result =
+          if resolved do
+            Syncforge.Comments.resolve_comment(comment)
+          else
+            Syncforge.Comments.unresolve_comment(comment)
+          end
+
+        case result do
+          {:ok, updated} ->
+            broadcast!(socket, "comment:resolved", %{comment: serialize_comment(updated)})
+            {:reply, {:ok, %{comment: serialize_comment(updated)}}, socket}
+
+          {:error, changeset} ->
+            {:reply, {:error, %{errors: format_changeset_errors(changeset)}}, socket}
+        end
+    end
+  end
+
   @impl true
   def terminate(_reason, socket) do
     user = socket.assigns.current_user
@@ -201,5 +298,31 @@ defmodule SyncforgeWeb.RoomChannel do
     # Use hash of user_id to deterministically pick a color
     index = :erlang.phash2(user_id, length(@default_cursor_colors))
     Enum.at(@default_cursor_colors, index)
+  end
+
+  # Serialize a comment struct for JSON response
+  defp serialize_comment(comment) do
+    %{
+      id: comment.id,
+      body: comment.body,
+      anchor_id: comment.anchor_id,
+      anchor_type: comment.anchor_type,
+      position: comment.position,
+      resolved_at: comment.resolved_at,
+      user_id: comment.user_id,
+      room_id: comment.room_id,
+      parent_id: comment.parent_id,
+      inserted_at: comment.inserted_at,
+      updated_at: comment.updated_at
+    }
+  end
+
+  # Format Ecto changeset errors for JSON response
+  defp format_changeset_errors(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+      end)
+    end)
   end
 end
