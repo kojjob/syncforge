@@ -383,6 +383,38 @@ defmodule Syncforge.NotificationsTest do
     end
   end
 
+  describe "create_and_broadcast_notification/1" do
+    setup do
+      user_id = Ecto.UUID.generate()
+      actor_id = Ecto.UUID.generate()
+      %{user_id: user_id, actor_id: actor_id}
+    end
+
+    test "creates notification with valid data", %{user_id: user_id, actor_id: actor_id} do
+      attrs = %{
+        type: "comment_mention",
+        user_id: user_id,
+        actor_id: actor_id,
+        payload: %{"message" => "mentioned you"}
+      }
+
+      assert {:ok, %Notification{} = notification} =
+               Notifications.create_and_broadcast_notification(attrs)
+
+      assert notification.type == "comment_mention"
+      assert notification.user_id == user_id
+      assert notification.actor_id == actor_id
+      assert notification.payload["message"] == "mentioned you"
+    end
+
+    test "returns error with invalid data" do
+      attrs = %{type: "invalid_type", user_id: Ecto.UUID.generate()}
+
+      assert {:error, changeset} = Notifications.create_and_broadcast_notification(attrs)
+      assert %{type: ["is invalid"]} = errors_on(changeset)
+    end
+  end
+
   describe "pagination" do
     setup do
       user_id = Ecto.UUID.generate()

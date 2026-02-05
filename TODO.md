@@ -54,8 +54,8 @@
 
 ### Notifications
 - [x] Notification schema
-- [ ] Real-time notification delivery
-- [ ] Notification preferences
+- [x] Real-time notification delivery
+- [x] Notification preferences
 - [x] Read/unread status
 - [ ] Activity feed
 
@@ -185,10 +185,11 @@
 15. **Reconnection Logic** - JavaScript SDK with ConnectionManager (exponential backoff, state tracking) and ConnectionStatus LiveView hook
 16. **Comment Reactions** - Emoji reactions on comments with toggle support, batch query optimization, and reactions embedded in comment state
 17. **Notifications Context** - Notification schema with 6 types (mention, reply, resolved, reaction, invite, joined), CRUD operations, read/unread tracking, pagination, and cleanup
+18. **Real-time Notification Delivery** - NotificationChannel for instant notifications via Phoenix Channels with mark_read, mark_all_read, and list handlers
+19. **Notification Preferences** - Per-user preference settings for each notification type with get_or_create, should_notify?, and preference-aware creation
 
 ### Up Next
-- Real-time notification delivery via Phoenix Channels
-- Notification preferences (per-user settings)
+- Activity feed (room-level activity stream)
 
 ---
 
