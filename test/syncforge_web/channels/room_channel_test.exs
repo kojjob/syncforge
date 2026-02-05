@@ -329,6 +329,33 @@ defmodule SyncforgeWeb.RoomChannelTest do
       assert_reply ref, :error, %{reason: :not_found}
     end
 
+    test "rejects update for comment from a different room", %{
+      socket: socket,
+      user: user,
+      comment: comment
+    } do
+      # Create a second room and join it
+      {:ok, other_room} = Syncforge.Rooms.create_room(%{name: "Other Room", is_public: true})
+
+      other_user = %{
+        id: user.id,
+        name: user.name,
+        avatar_url: user.avatar_url
+      }
+
+      {:ok, other_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(other_user)}, connect_info: %{})
+
+      {:ok, _reply, other_socket} =
+        subscribe_and_join(other_socket, RoomChannel, "room:#{other_room.id}")
+
+      # Try to update a comment that belongs to the first room from the second room's channel
+      ref =
+        push(other_socket, "comment:update", %{"id" => comment.id, "body" => "Cross-room edit"})
+
+      assert_reply ref, :error, %{reason: :unauthorized}
+    end
+
     test "rejects update by non-owner", %{room: room, comment: comment} do
       # Connect as a different user
       other_user = %{
@@ -385,6 +412,30 @@ defmodule SyncforgeWeb.RoomChannelTest do
       ref = push(socket, "comment:delete", %{"id" => fake_id})
 
       assert_reply ref, :error, %{reason: :not_found}
+    end
+
+    test "rejects delete for comment from a different room", %{
+      socket: socket,
+      user: user,
+      comment: comment
+    } do
+      {:ok, other_room} = Syncforge.Rooms.create_room(%{name: "Other Room", is_public: true})
+
+      other_user = %{
+        id: user.id,
+        name: user.name,
+        avatar_url: user.avatar_url
+      }
+
+      {:ok, other_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(other_user)}, connect_info: %{})
+
+      {:ok, _reply, other_socket} =
+        subscribe_and_join(other_socket, RoomChannel, "room:#{other_room.id}")
+
+      ref = push(other_socket, "comment:delete", %{"id" => comment.id})
+
+      assert_reply ref, :error, %{reason: :unauthorized}
     end
 
     test "rejects delete by non-owner", %{room: room, comment: comment} do
@@ -626,6 +677,30 @@ defmodule SyncforgeWeb.RoomChannelTest do
       ref = push(socket, "comment:resolve", %{"id" => fake_id, "resolved" => true})
 
       assert_reply ref, :error, %{reason: :not_found}
+    end
+
+    test "rejects resolve for comment from a different room", %{
+      socket: socket,
+      user: user,
+      comment: comment
+    } do
+      {:ok, other_room} = Syncforge.Rooms.create_room(%{name: "Other Room", is_public: true})
+
+      other_user = %{
+        id: user.id,
+        name: user.name,
+        avatar_url: user.avatar_url
+      }
+
+      {:ok, other_socket} =
+        connect(UserSocket, %{"token" => generate_test_token(other_user)}, connect_info: %{})
+
+      {:ok, _reply, other_socket} =
+        subscribe_and_join(other_socket, RoomChannel, "room:#{other_room.id}")
+
+      ref = push(other_socket, "comment:resolve", %{"id" => comment.id, "resolved" => true})
+
+      assert_reply ref, :error, %{reason: :unauthorized}
     end
 
     test "rejects resolve by non-owner", %{room: room, comment: comment} do

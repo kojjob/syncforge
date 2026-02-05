@@ -233,7 +233,7 @@ defmodule SyncforgeWeb.RoomChannel do
         {:reply, {:error, %{reason: :not_found}}, socket}
 
       comment ->
-        if comment.user_id != user.id do
+        if comment.room_id != socket.assigns.room_id or comment.user_id != user.id do
           {:reply, {:error, %{reason: :unauthorized}}, socket}
         else
           update_attrs = Map.take(params, ["body", "anchor_id", "anchor_type", "position"])
@@ -259,7 +259,7 @@ defmodule SyncforgeWeb.RoomChannel do
         {:reply, {:error, %{reason: :not_found}}, socket}
 
       comment ->
-        if comment.user_id != user.id do
+        if comment.room_id != socket.assigns.room_id or comment.user_id != user.id do
           {:reply, {:error, %{reason: :unauthorized}}, socket}
         else
           case Syncforge.Comments.delete_comment(comment) do
@@ -290,7 +290,7 @@ defmodule SyncforgeWeb.RoomChannel do
         {:reply, {:error, %{reason: :not_found}}, socket}
 
       comment ->
-        if comment.user_id != user.id do
+        if comment.room_id != socket.assigns.room_id or comment.user_id != user.id do
           {:reply, {:error, %{reason: :unauthorized}}, socket}
         else
           result =
