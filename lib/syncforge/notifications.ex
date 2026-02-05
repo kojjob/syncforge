@@ -29,6 +29,32 @@ defmodule Syncforge.Notifications do
   end
 
   @doc """
+  Creates a notification and broadcasts it to the user's notification channel.
+
+  This is the preferred method for creating notifications as it ensures
+  the user receives the notification in real-time.
+
+  ## Examples
+
+      iex> create_and_broadcast_notification(%{type: "comment_mention", user_id: "uuid", actor_id: "uuid"})
+      {:ok, %Notification{}}
+
+      iex> create_and_broadcast_notification(%{type: "invalid"})
+      {:error, %Ecto.Changeset{}}
+  """
+  def create_and_broadcast_notification(attrs) do
+    case create_notification(attrs) do
+      {:ok, notification} ->
+        # Broadcast to the user's notification channel
+        SyncforgeWeb.NotificationChannel.broadcast_notification(notification)
+        {:ok, notification}
+
+      {:error, changeset} ->
+        {:error, changeset}
+    end
+  end
+
+  @doc """
   Gets a notification by ID.
 
   Returns `nil` if the notification does not exist.

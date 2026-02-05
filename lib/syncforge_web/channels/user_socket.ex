@@ -9,9 +9,11 @@ defmodule SyncforgeWeb.UserSocket do
   use Phoenix.Socket
 
   alias SyncforgeWeb.RoomChannel
+  alias SyncforgeWeb.NotificationChannel
 
   # Channels
   channel "room:*", RoomChannel
+  channel "notification:*", NotificationChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user.
