@@ -42,7 +42,7 @@
 - [x] Cursor position tracking
 - [x] Cursor broadcast optimization (throttling)
 - [x] Cursor labels (user name + color display)
-- [ ] Client-side cursor smoothing
+- [x] Client-side cursor smoothing
 - [ ] Selection highlighting
 
 ### Threaded Comments
@@ -180,10 +180,11 @@
 10. **Cursor Labels** - User name and deterministic color in cursor broadcasts
 11. **Real-time Comment Sync** - Channel handlers for comment CRUD with broadcasts
 12. **Room State Persistence** - Push room state (comments, metadata) to users on join
+13. **Client-side Cursor Smoothing** - JavaScript SDK with lerp interpolation and CursorTracking LiveView hook
 
 ### Up Next
-- Client-side cursor smoothing
 - Selection highlighting
+- Reconnection logic (client-side SDK)
 
 ---
 
