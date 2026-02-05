@@ -39,30 +39,30 @@ defmodule SyncforgeWeb.LandingLive do
   # Code examples for SDK integration
   defp code_example("presence") do
     """
-    <span class="comment">// Initialize SyncForge and join a room</span>
-    <span class="keyword">import</span> { SyncForge } <span class="keyword">from</span> <span class="string">'@syncforge/sdk'</span>
+    <span class="text-zinc-500">// Initialize SyncForge and join a room</span>
+    <span class="text-purple-400">import</span> { SyncForge } <span class="text-purple-400">from</span> <span class="text-emerald-400">'@syncforge/sdk'</span>
 
-    <span class="keyword">const</span> client = <span class="keyword">new</span> <span class="function">SyncForge</span>({
-      apiKey: <span class="string">'your-api-key'</span>
+    <span class="text-purple-400">const</span> client = <span class="text-purple-400">new</span> <span class="text-pink-400">SyncForge</span>({
+      apiKey: <span class="text-emerald-400">'your-api-key'</span>
     })
 
-    <span class="keyword">const</span> room = client.<span class="function">joinRoom</span>(<span class="string">'my-room'</span>, {
-      user: { name: <span class="string">'John'</span>, avatar: <span class="string">'...'</span> }
+    <span class="text-purple-400">const</span> room = client.<span class="text-pink-400">joinRoom</span>(<span class="text-emerald-400">'my-room'</span>, {
+      user: { name: <span class="text-emerald-400">'John'</span>, avatar: <span class="text-emerald-400">'...'</span> }
     })
 
-    <span class="comment">// Subscribe to presence changes</span>
-    room.<span class="function">on</span>(<span class="string">'presence'</span>, (users) => {
-      console.<span class="function">log</span>(<span class="string">'Online:'</span>, users.length)
+    <span class="text-zinc-500">// Subscribe to presence changes</span>
+    room.<span class="text-pink-400">on</span>(<span class="text-emerald-400">'presence'</span>, (users) => {
+      console.<span class="text-pink-400">log</span>(<span class="text-emerald-400">'Online:'</span>, users.length)
     })
     """
   end
 
   defp code_example("cursors") do
     """
-    <span class="comment">// Track and display live cursors</span>
-    room.<span class="function">on</span>(<span class="string">'cursors'</span>, (cursors) => {
-      cursors.<span class="function">forEach</span>((cursor) => {
-        <span class="function">renderCursor</span>({
+    <span class="text-zinc-500">// Track and display live cursors</span>
+    room.<span class="text-pink-400">on</span>(<span class="text-emerald-400">'cursors'</span>, (cursors) => {
+      cursors.<span class="text-pink-400">forEach</span>((cursor) => {
+        <span class="text-pink-400">renderCursor</span>({
           id: cursor.userId,
           x: cursor.x,
           y: cursor.y,
@@ -71,28 +71,28 @@ defmodule SyncforgeWeb.LandingLive do
       })
     })
 
-    <span class="comment">// Update your cursor position</span>
-    document.<span class="function">addEventListener</span>(<span class="string">'mousemove'</span>, (e) => {
-      room.<span class="function">updateCursor</span>({ x: e.clientX, y: e.clientY })
+    <span class="text-zinc-500">// Update your cursor position</span>
+    document.<span class="text-pink-400">addEventListener</span>(<span class="text-emerald-400">'mousemove'</span>, (e) => {
+      room.<span class="text-pink-400">updateCursor</span>({ x: e.clientX, y: e.clientY })
     })
     """
   end
 
   defp code_example("comments") do
     """
-    <span class="comment">// Add threaded comments to any element</span>
-    <span class="keyword">const</span> thread = room.<span class="function">createThread</span>({
-      anchorId: <span class="string">'element-123'</span>,
+    <span class="text-zinc-500">// Add threaded comments to any element</span>
+    <span class="text-purple-400">const</span> thread = room.<span class="text-pink-400">createThread</span>({
+      anchorId: <span class="text-emerald-400">'element-123'</span>,
       position: { x: 100, y: 200 }
     })
 
-    <span class="keyword">await</span> thread.<span class="function">addComment</span>({
-      body: <span class="string">'This needs more contrast'</span>
+    <span class="text-purple-400">await</span> thread.<span class="text-pink-400">addComment</span>({
+      body: <span class="text-emerald-400">'This needs more contrast'</span>
     })
 
-    <span class="comment">// Subscribe to new comments</span>
-    room.<span class="function">on</span>(<span class="string">'comment:new'</span>, (comment) => {
-      <span class="function">showNotification</span>(comment)
+    <span class="text-zinc-500">// Subscribe to new comments</span>
+    room.<span class="text-pink-400">on</span>(<span class="text-emerald-400">'comment:new'</span>, (comment) => {
+      <span class="text-pink-400">showNotification</span>(comment)
     })
     """
   end
@@ -104,488 +104,25 @@ defmodule SyncforgeWeb.LandingLive do
     ~H"""
     <div
       id="landing-page"
-      class="landing-page"
+      class="landing-page min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300"
       data-theme={@theme}
       phx-hook="ThemeToggle"
     >
-      <!-- Styles -->
+      <!-- Custom Styles -->
       <style>
-        /* Import fonts */
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
 
-        /* CSS Variables */
-        :root, .landing-page, [data-theme="light"] {
-          --font-display: 'Instrument Serif', Georgia, serif;
-          --font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-          --font-mono: ui-monospace, 'SF Mono', Monaco, monospace;
+        .font-display { font-family: 'Instrument Serif', Georgia, serif; }
 
-          /* Light theme (default) - high contrast */
-          --bg-primary: #FFFFFF;
-          --bg-secondary: #F5F5F5;
-          --bg-elevated: #FFFFFF;
-          --bg-nav: rgba(255, 255, 255, 0.85);
-          --text-primary: #0F172A;
-          --text-secondary: #334155;
-          --text-tertiary: #64748B;
-          --border: #CBD5E1;
-          --border-subtle: #E2E8F0;
-          --accent: #047857;
-          --accent-hover: #065F46;
-          --accent-soft: rgba(4, 120, 87, 0.12);
-          --cta: #7C3AED;
-          --cta-hover: #6D28D9;
-          --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-          --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
-          --shadow-lg: 0 12px 40px rgba(0,0,0,0.2);
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Dark theme - applied via data attribute */
-        [data-theme="dark"] {
-          --bg-primary: #09090B;
-          --bg-secondary: #18181B;
-          --bg-elevated: #27272A;
-          --bg-nav: rgba(9, 9, 11, 0.85);
-          --text-primary: #FAFAFA;
-          --text-secondary: #A1A1AA;
-          --text-tertiary: #71717A;
-          --border: #3F3F46;
-          --border-subtle: #27272A;
-          --accent: #10B981;
-          --accent-hover: #34D399;
-          --accent-soft: rgba(16, 185, 129, 0.15);
-          --cta: #A78BFA;
-          --cta-hover: #C4B5FD;
-          --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
-          --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
-          --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
+        @keyframes pulse-dot {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.1); }
         }
-
-        /* System preference detection - only when no explicit theme is set */
-        @media (prefers-color-scheme: dark) {
-          :root:not([data-theme="light"]):not([data-theme="dark"]) {
-            --bg-primary: #09090B;
-            --bg-secondary: #18181B;
-            --bg-elevated: #27272A;
-            --bg-nav: rgba(9, 9, 11, 0.85);
-            --text-primary: #FAFAFA;
-            --text-secondary: #A1A1AA;
-            --text-tertiary: #71717A;
-            --border: #3F3F46;
-            --border-subtle: #27272A;
-            --accent: #10B981;
-            --accent-hover: #34D399;
-            --accent-soft: rgba(16, 185, 129, 0.15);
-            --cta: #A78BFA;
-            --cta-hover: #C4B5FD;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
-            --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
-          }
-        }
-
-        /* Base styles */
-        .landing-page {
-          background: var(--bg-primary);
-          color: var(--text-primary);
-          min-height: 100vh;
-          transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        /* Typography */
-        .display-xl {
-          font-family: var(--font-display);
-          font-size: clamp(2.5rem, 8vw, 5rem);
-          font-weight: 400;
-          line-height: 1.05;
-          letter-spacing: -0.02em;
-        }
-
-        .display-lg {
-          font-family: var(--font-display);
-          font-size: clamp(2rem, 5vw, 3.5rem);
-          font-weight: 400;
-          line-height: 1.1;
-          letter-spacing: -0.02em;
-        }
-
-        .display-md {
-          font-family: var(--font-display);
-          font-size: clamp(1.5rem, 3vw, 2rem);
-          font-weight: 400;
-          line-height: 1.2;
-        }
-
-        .body-lg {
-          font-family: var(--font-body);
-          font-size: 1.125rem;
-          line-height: 1.7;
-          color: var(--text-secondary);
-        }
-
-        .body-md {
-          font-family: var(--font-body);
-          font-size: 1rem;
-          line-height: 1.6;
-          color: var(--text-secondary);
-        }
-
-        .label {
-          font-family: var(--font-body);
-          font-size: 0.75rem;
-          font-weight: 600;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--accent);
-        }
-
-        .mono {
-          font-family: var(--font-mono);
-        }
-
-        /* Navigation */
-        .nav {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          z-index: 100;
-          background: var(--bg-nav);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .nav-inner {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 1rem 1.5rem;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .logo {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-family: var(--font-body);
-          font-weight: 600;
-          font-size: 1.125rem;
-          color: var(--text-primary);
-          text-decoration: none;
-        }
-
-        .logo-mark {
-          width: 32px;
-          height: 32px;
-          background: linear-gradient(135deg, var(--accent) 0%, var(--cta) 100%);
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .nav-links {
-          display: none;
-          gap: 2rem;
-        }
-
-        @media (min-width: 768px) {
-          .nav-links {
-            display: flex;
-          }
-        }
-
-        .nav-link {
-          font-family: var(--font-body);
-          font-size: 0.875rem;
-          color: var(--text-secondary);
-          text-decoration: none;
-          transition: color 0.2s;
-        }
-
-        .nav-link:hover {
-          color: var(--text-primary);
-        }
-
-        .nav-actions {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-
-        /* Theme Toggle */
-        .theme-toggle {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          padding: 0.25rem;
-          background: var(--bg-secondary);
-          border-radius: 9999px;
-          border: 1px solid var(--border);
-        }
-
-        .theme-btn {
-          padding: 0.375rem;
-          border-radius: 9999px;
-          background: transparent;
-          border: none;
-          color: var(--text-tertiary);
-          cursor: pointer;
-          transition: all 0.2s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .theme-btn.active {
-          background: var(--bg-elevated);
-          color: var(--text-primary);
-          box-shadow: var(--shadow-sm);
-        }
-
-        .theme-btn:hover:not(.active) {
-          color: var(--text-secondary);
-        }
-
-        /* Buttons */
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1.5rem;
-          font-family: var(--font-body);
-          font-size: 0.875rem;
-          font-weight: 500;
-          border-radius: 9999px;
-          border: none;
-          cursor: pointer;
-          transition: all 0.2s;
-          text-decoration: none;
-        }
-
-        .btn-primary {
-          background: var(--cta);
-          color: white;
-        }
-
-        .btn-primary:hover {
-          background: var(--cta-hover);
-          transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-          background: var(--bg-elevated);
-          color: var(--text-primary);
-          border: 1px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-          background: var(--bg-secondary);
-          border-color: var(--text-tertiary);
-        }
-
-        .btn-ghost {
-          background: transparent;
-          color: var(--text-secondary);
-          padding: 0.5rem 1rem;
-        }
-
-        .btn-ghost:hover {
-          color: var(--text-primary);
-          background: var(--bg-secondary);
-        }
-
-        /* Hero Section */
-        .hero {
-          padding: 8rem 1.5rem 4rem;
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        .hero-content {
-          text-align: center;
-          max-width: 800px;
-          margin: 0 auto 4rem;
-        }
-
-        .hero-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          background: var(--accent-soft);
-          border: 1px solid var(--accent);
-          border-radius: 9999px;
-          margin-bottom: 2rem;
-          animation: fadeInUp 0.6s ease-out;
-        }
-
-        .hero-badge-dot {
-          width: 8px;
-          height: 8px;
-          background: var(--accent);
-          border-radius: 50%;
-          animation: pulse 2s ease-in-out infinite;
-        }
-
-        .hero-title {
-          margin-bottom: 1.5rem;
-          animation: fadeInUp 0.6s ease-out 0.1s both;
-        }
-
-        .hero-title em {
-          font-style: italic;
-          color: var(--accent);
-        }
-
-        .hero-subtitle {
-          max-width: 560px;
-          margin: 0 auto 2.5rem;
-          animation: fadeInUp 0.6s ease-out 0.2s both;
-        }
-
-        .hero-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 1rem;
-          justify-content: center;
-          animation: fadeInUp 0.6s ease-out 0.3s both;
-        }
-
-        /* Interactive Demo */
-        .hero-demo {
-          position: relative;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border);
-          border-radius: 16px;
-          padding: 2rem;
-          box-shadow: var(--shadow-lg);
-          overflow: hidden;
-          animation: fadeInUp 0.8s ease-out 0.4s both;
-        }
-
-        .demo-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 1.5rem;
-          padding-bottom: 1rem;
-          border-bottom: 1px solid var(--border);
-        }
-
-        .demo-title {
-          font-family: var(--font-body);
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: var(--text-primary);
-        }
-
-        .demo-presence {
-          display: flex;
-          align-items: center;
-        }
-
-        .presence-avatar {
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          border: 2px solid var(--bg-elevated);
-          margin-left: -8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.625rem;
-          font-weight: 600;
-          color: white;
-        }
-
-        .presence-avatar:first-child {
-          margin-left: 0;
-        }
-
-        .presence-avatar.online::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          right: 0;
-          width: 8px;
-          height: 8px;
-          background: #22C55E;
-          border: 2px solid var(--bg-elevated);
-          border-radius: 50%;
-        }
-
-        .demo-content {
-          position: relative;
-          min-height: 200px;
-          background: var(--bg-secondary);
-          border-radius: 8px;
-          padding: 1.5rem;
-        }
-
-        .demo-text {
-          font-family: var(--font-mono);
-          font-size: 0.875rem;
-          color: var(--text-secondary);
-          line-height: 1.8;
-        }
-
-        .demo-text .highlight {
-          background: rgba(124, 58, 237, 0.2);
-          border-bottom: 2px solid var(--cta);
-          padding: 0.125rem 0;
-        }
-
-        /* Animated Cursors */
-        .cursor {
-          position: absolute;
-          pointer-events: none;
-          z-index: 10;
-        }
-
-        .cursor-pointer {
-          width: 0;
-          height: 0;
-          border-left: 6px solid transparent;
-          border-right: 6px solid transparent;
-          border-top: 12px solid;
-          transform: rotate(-45deg);
-        }
-
-        .cursor-label {
-          position: absolute;
-          top: 10px;
-          left: 8px;
-          padding: 0.25rem 0.5rem;
-          font-size: 0.625rem;
-          font-weight: 500;
-          color: white;
-          border-radius: 4px;
-          white-space: nowrap;
-        }
-
-        .cursor-1 {
-          animation: cursorMove1 8s ease-in-out infinite;
-        }
-
-        .cursor-1 .cursor-pointer { border-top-color: #F472B6; }
-        .cursor-1 .cursor-label { background: #F472B6; }
-
-        .cursor-2 {
-          animation: cursorMove2 10s ease-in-out infinite;
-        }
-
-        .cursor-2 .cursor-pointer { border-top-color: #60A5FA; }
-        .cursor-2 .cursor-label { background: #60A5FA; }
-
-        .cursor-3 {
-          animation: cursorMove3 7s ease-in-out infinite;
-        }
-
-        .cursor-3 .cursor-pointer { border-top-color: #34D399; }
-        .cursor-3 .cursor-label { background: #34D399; }
 
         @keyframes cursorMove1 {
           0%, 100% { transform: translate(20px, 40px); }
@@ -605,458 +142,32 @@ defmodule SyncforgeWeb.LandingLive do
           50% { transform: translate(50px, 120px); }
         }
 
-        /* Typing Indicator */
-        .typing-indicator {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          padding: 0.5rem 0.75rem;
-          background: var(--bg-elevated);
-          border-radius: 9999px;
-          margin-top: 1rem;
-          border: 1px solid var(--border);
-        }
-
-        .typing-dot {
-          width: 4px;
-          height: 4px;
-          background: var(--text-tertiary);
-          border-radius: 50%;
-          animation: typingBounce 1.4s ease-in-out infinite;
-        }
-
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
         @keyframes typingBounce {
           0%, 60%, 100% { transform: translateY(0); }
           30% { transform: translateY(-4px); }
         }
 
-        /* Features Section */
-        .features {
-          padding: 6rem 1.5rem;
-          max-width: 1200px;
-          margin: 0 auto;
-        }
+        .animate-fadeInUp { animation: fadeInUp 0.6s ease-out forwards; }
+        .animate-fadeInUp-delay-1 { animation: fadeInUp 0.6s ease-out 0.1s forwards; opacity: 0; }
+        .animate-fadeInUp-delay-2 { animation: fadeInUp 0.6s ease-out 0.2s forwards; opacity: 0; }
+        .animate-fadeInUp-delay-3 { animation: fadeInUp 0.6s ease-out 0.3s forwards; opacity: 0; }
+        .animate-fadeInUp-delay-4 { animation: fadeInUp 0.8s ease-out 0.4s forwards; opacity: 0; }
 
-        .section-header {
-          text-align: center;
-          max-width: 600px;
-          margin: 0 auto 4rem;
-        }
+        .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+        .cursor-1 { animation: cursorMove1 8s ease-in-out infinite; }
+        .cursor-2 { animation: cursorMove2 10s ease-in-out infinite; }
+        .cursor-3 { animation: cursorMove3 7s ease-in-out infinite; }
 
-        .section-header .label {
-          margin-bottom: 1rem;
-        }
-
-        .section-header .display-lg {
-          margin-bottom: 1rem;
-        }
-
-        .features-grid {
-          display: grid;
-          gap: 1.5rem;
-        }
-
-        @media (min-width: 768px) {
-          .features-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-
-        .feature-card {
-          background: var(--bg-elevated);
-          border: 1px solid var(--border);
-          border-radius: 16px;
-          padding: 2rem;
-          transition: all 0.3s ease;
-          box-shadow: var(--shadow-sm);
-        }
-
-        .feature-card:hover {
-          border-color: var(--accent);
-          transform: translateY(-4px);
-          box-shadow: var(--shadow-lg);
-        }
-
-        .feature-icon {
-          width: 48px;
-          height: 48px;
-          background: var(--accent-soft);
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 1.5rem;
-          color: var(--accent);
-        }
-
-        .feature-title {
-          font-family: var(--font-display);
-          font-size: 1.25rem;
-          margin-bottom: 0.75rem;
-          color: var(--text-primary);
-        }
-
-        .feature-desc {
-          color: var(--text-secondary);
-          line-height: 1.6;
-          margin-bottom: 1.5rem;
-        }
-
-        .feature-metrics {
-          display: flex;
-          gap: 1.5rem;
-          padding-top: 1rem;
-          border-top: 1px solid var(--border);
-        }
-
-        .metric {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-        }
-
-        .metric-value {
-          font-family: var(--font-mono);
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: var(--accent);
-        }
-
-        .metric-label {
-          font-size: 0.75rem;
-          color: var(--text-tertiary);
-        }
-
-        /* Code Section */
-        .code-section {
-          padding: 6rem 1.5rem;
-          background: var(--bg-secondary);
-        }
-
-        .code-inner {
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        .code-tabs {
-          display: flex;
-          gap: 0.5rem;
-          margin-bottom: 1.5rem;
-          overflow-x: auto;
-          padding-bottom: 0.5rem;
-        }
-
-        .code-tab {
-          padding: 0.5rem 1rem;
-          background: transparent;
-          border: 1px solid var(--border);
-          border-radius: 8px;
-          font-family: var(--font-mono);
-          font-size: 0.875rem;
-          color: var(--text-secondary);
-          cursor: pointer;
-          transition: all 0.2s;
-          white-space: nowrap;
-        }
-
-        .code-tab:hover {
-          border-color: var(--text-tertiary);
-          color: var(--text-primary);
-        }
-
-        .code-tab.active {
-          background: var(--accent);
-          border-color: var(--accent);
-          color: white;
-        }
-
-        .code-block {
-          background: var(--bg-elevated);
-          border: 1px solid var(--border);
-          border-radius: 12px;
-          overflow: hidden;
-        }
-
-        .code-header {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1rem;
-          background: var(--bg-secondary);
-          border-bottom: 1px solid var(--border);
-        }
-
-        .code-dot {
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-        }
-
-        .code-dot.red { background: #FF5F57; }
-        .code-dot.yellow { background: #FEBC2E; }
-        .code-dot.green { background: #28C840; }
-
-        .code-content {
-          padding: 1.5rem;
-          overflow-x: auto;
-        }
-
-        .code-content pre {
-          font-family: var(--font-mono);
-          font-size: 0.875rem;
-          line-height: 1.7;
-          color: var(--text-primary);
-          margin: 0;
-        }
-
-        .code-content .comment { color: var(--text-tertiary); }
-        .code-content .keyword { color: var(--cta); }
-        .code-content .string { color: var(--accent); }
-        .code-content .function { color: #F472B6; }
-        .code-content .variable { color: #60A5FA; }
-
-        /* Pricing Section */
-        .pricing {
-          padding: 6rem 1.5rem;
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        .pricing-grid {
-          display: grid;
-          gap: 1.5rem;
-        }
-
-        @media (min-width: 768px) {
-          .pricing-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-
-        @media (min-width: 1024px) {
-          .pricing-grid {
-            grid-template-columns: repeat(4, 1fr);
-          }
-        }
-
-        .pricing-card {
-          background: var(--bg-elevated);
-          border: 1px solid var(--border);
-          border-radius: 16px;
-          padding: 2rem;
-          display: flex;
-          flex-direction: column;
-          transition: all 0.3s ease;
-          box-shadow: var(--shadow-sm);
-        }
-
-        .pricing-card:hover {
-          transform: translateY(-4px);
-          box-shadow: var(--shadow-lg);
-        }
-
-        .pricing-card.featured {
-          border-color: var(--accent);
-          position: relative;
-        }
-
-        .pricing-card.featured::before {
-          content: 'Most Popular';
-          position: absolute;
-          top: -12px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: var(--accent);
-          color: white;
-          padding: 0.25rem 0.75rem;
-          font-size: 0.75rem;
-          font-weight: 600;
-          border-radius: 9999px;
-        }
-
-        .pricing-name {
-          font-family: var(--font-body);
-          font-weight: 600;
-          font-size: 1rem;
-          color: var(--text-primary);
-          margin-bottom: 0.5rem;
-        }
-
-        .pricing-price {
-          display: flex;
-          align-items: baseline;
-          gap: 0.25rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .pricing-amount {
-          font-family: var(--font-display);
-          font-size: 2.5rem;
-          color: var(--text-primary);
-        }
-
-        .pricing-period {
-          font-size: 0.875rem;
-          color: var(--text-tertiary);
-        }
-
-        .pricing-desc {
-          font-size: 0.875rem;
-          color: var(--text-secondary);
-          margin-bottom: 1.5rem;
-          padding-bottom: 1.5rem;
-          border-bottom: 1px solid var(--border);
-        }
-
-        .pricing-features {
-          list-style: none;
-          padding: 0;
-          margin: 0 0 2rem 0;
-          flex-grow: 1;
-        }
-
-        .pricing-features li {
-          display: flex;
-          align-items: flex-start;
-          gap: 0.75rem;
-          font-size: 0.875rem;
-          color: var(--text-secondary);
-          margin-bottom: 0.75rem;
-        }
-
-        .pricing-features li svg {
-          flex-shrink: 0;
-          color: var(--accent);
-          margin-top: 0.125rem;
-        }
-
-        .pricing-card .btn {
-          width: 100%;
-        }
-
-        /* CTA Section */
-        .cta-section {
-          padding: 6rem 1.5rem;
-          background: var(--bg-secondary);
-        }
-
-        .cta-inner {
-          max-width: 600px;
-          margin: 0 auto;
-          text-align: center;
-        }
-
-        .cta-title {
-          margin-bottom: 1rem;
-        }
-
-        .cta-subtitle {
-          margin-bottom: 2rem;
-        }
-
-        .cta-form {
-          display: flex;
-          gap: 0.75rem;
-          max-width: 400px;
-          margin: 0 auto;
-        }
-
-        @media (max-width: 480px) {
-          .cta-form {
-            flex-direction: column;
-          }
-        }
-
-        .cta-input {
-          flex-grow: 1;
-          padding: 0.75rem 1rem;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border);
-          border-radius: 9999px;
-          font-family: var(--font-body);
-          font-size: 0.875rem;
-          color: var(--text-primary);
-          outline: none;
-          transition: border-color 0.2s;
-        }
-
-        .cta-input::placeholder {
-          color: var(--text-tertiary);
-        }
-
-        .cta-input:focus {
-          border-color: var(--accent);
-        }
-
-        /* Footer */
-        .footer {
-          padding: 3rem 1.5rem;
-          border-top: 1px solid var(--border);
-        }
-
-        .footer-inner {
-          max-width: 1200px;
-          margin: 0 auto;
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-        }
-
-        @media (min-width: 768px) {
-          .footer-inner {
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: center;
-          }
-        }
-
-        .footer-copy {
-          font-size: 0.875rem;
-          color: var(--text-tertiary);
-        }
-
-        .footer-links {
-          display: flex;
-          gap: 2rem;
-        }
-
-        .footer-link {
-          font-size: 0.875rem;
-          color: var(--text-secondary);
-          text-decoration: none;
-          transition: color 0.2s;
-        }
-
-        .footer-link:hover {
-          color: var(--text-primary);
-        }
-
-        /* Animations */
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.1); }
-        }
+        .typing-dot { animation: typingBounce 1.4s ease-in-out infinite; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
       </style>
 
       <!-- Navigation -->
-      <nav class="nav">
-        <div class="nav-inner">
-          <a href="/" class="logo">
-            <div class="logo-mark">
+      <nav class="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <a href="/" class="flex items-center gap-2 font-semibold text-lg text-zinc-900 dark:text-white">
+            <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-purple-600 rounded-lg flex items-center justify-center">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
                 <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                 <path d="M2 17l10 5 10-5"/>
@@ -1066,17 +177,18 @@ defmodule SyncforgeWeb.LandingLive do
             SyncForge
           </a>
 
-          <div class="nav-links">
-            <a href="#features" class="nav-link">Features</a>
-            <a href="#developers" class="nav-link">Developers</a>
-            <a href="#pricing" class="nav-link">Pricing</a>
-            <a href="/docs" class="nav-link">Docs</a>
+          <div class="hidden md:flex gap-8">
+            <a href="#features" class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Features</a>
+            <a href="#developers" class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Developers</a>
+            <a href="#pricing" class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Pricing</a>
+            <a href="/docs" class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Docs</a>
           </div>
 
-          <div class="nav-actions">
-            <div class="theme-toggle">
+          <div class="flex items-center gap-3">
+            <!-- Theme Toggle -->
+            <div class="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-full border border-zinc-200 dark:border-zinc-700">
               <button
-                class={"theme-btn #{if @theme == "light", do: "active", else: ""}"}
+                class={"p-1.5 rounded-full transition-all " <> if(@theme == "light", do: "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white", else: "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300")}
                 phx-click="toggle_theme"
                 phx-value-theme="light"
                 title="Light mode"
@@ -1087,7 +199,7 @@ defmodule SyncforgeWeb.LandingLive do
                 </svg>
               </button>
               <button
-                class={"theme-btn #{if @theme == "system", do: "active", else: ""}"}
+                class={"p-1.5 rounded-full transition-all " <> if(@theme == "system", do: "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white", else: "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300")}
                 phx-click="toggle_theme"
                 phx-value-theme="system"
                 title="System preference"
@@ -1098,7 +210,7 @@ defmodule SyncforgeWeb.LandingLive do
                 </svg>
               </button>
               <button
-                class={"theme-btn #{if @theme == "dark", do: "active", else: ""}"}
+                class={"p-1.5 rounded-full transition-all " <> if(@theme == "dark", do: "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white", else: "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300")}
                 phx-click="toggle_theme"
                 phx-value-theme="dark"
                 title="Dark mode"
@@ -1109,189 +221,185 @@ defmodule SyncforgeWeb.LandingLive do
               </button>
             </div>
 
-            <a href="/login" class="btn btn-ghost">Sign in</a>
-            <a href="/signup" class="btn btn-primary">Get started</a>
+            <a href="/login" class="hidden sm:block text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white px-3 py-2 transition-colors">Sign in</a>
+            <a href="/signup" class="text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full transition-colors">Get started</a>
           </div>
         </div>
       </nav>
 
       <!-- Hero Section -->
-      <section class="hero">
-        <div class="hero-content">
-          <div class="hero-badge">
-            <span class="hero-badge-dot"></span>
-            <span class="label" style="color: var(--text-primary); letter-spacing: 0.05em;">Now in Public Beta</span>
+      <section class="pt-32 pb-16 px-6 max-w-6xl mx-auto">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+          <div class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-full mb-8 animate-fadeInUp">
+            <span class="w-2 h-2 bg-emerald-500 rounded-full pulse-dot"></span>
+            <span class="text-xs font-semibold tracking-wide text-emerald-700 dark:text-emerald-400">Now in Public Beta</span>
           </div>
 
-          <h1 class="display-xl hero-title">
-            Collaboration<br/><em>made seamless</em>
+          <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-normal leading-tight mb-6 animate-fadeInUp-delay-1">
+            Collaboration<br/><em class="text-emerald-600 dark:text-emerald-400">made seamless</em>
           </h1>
 
-          <p class="body-lg hero-subtitle">
+          <p class="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto mb-10 leading-relaxed animate-fadeInUp-delay-2">
             Add real-time presence, live cursors, and collaboration features to your app in minutes. Built on the BEAM for legendary reliability.
           </p>
 
-          <div class="hero-actions">
-            <a href="/signup" class="btn btn-primary">
+          <div class="flex flex-wrap gap-4 justify-center animate-fadeInUp-delay-3">
+            <a href="/signup" class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-medium px-6 py-3 rounded-full transition-all hover:-translate-y-0.5">
               Start building free
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M5 12h14m-7-7l7 7-7 7"/>
               </svg>
             </a>
-            <a href="/docs" class="btn btn-secondary">
+            <a href="/docs" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-medium px-6 py-3 rounded-full border border-zinc-200 dark:border-zinc-700 transition-all">
               Read the docs
             </a>
           </div>
         </div>
 
         <!-- Interactive Demo -->
-        <div class="hero-demo">
-          <div class="demo-header">
-            <span class="demo-title">design-review.fig</span>
-            <div class="demo-presence">
-              <div class="presence-avatar" style="background: #F472B6; position: relative;">
-                <span>SK</span>
-              </div>
-              <div class="presence-avatar" style="background: #60A5FA; position: relative;">
-                <span>JD</span>
-              </div>
-              <div class="presence-avatar" style="background: #34D399; position: relative;">
-                <span>AM</span>
-              </div>
-              <div class="presence-avatar" style="background: var(--bg-secondary); color: var(--text-secondary);">
-                +3
-              </div>
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xl dark:shadow-2xl animate-fadeInUp-delay-4">
+          <div class="flex items-center justify-between mb-6 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+            <span class="text-sm font-medium text-zinc-900 dark:text-white">design-review.fig</span>
+            <div class="flex items-center">
+              <div class="w-7 h-7 rounded-full bg-pink-400 border-2 border-white dark:border-zinc-900 flex items-center justify-center text-[10px] font-semibold text-white">SK</div>
+              <div class="w-7 h-7 rounded-full bg-blue-400 border-2 border-white dark:border-zinc-900 flex items-center justify-center text-[10px] font-semibold text-white -ml-2">JD</div>
+              <div class="w-7 h-7 rounded-full bg-emerald-400 border-2 border-white dark:border-zinc-900 flex items-center justify-center text-[10px] font-semibold text-white -ml-2">AM</div>
+              <div class="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-700 border-2 border-white dark:border-zinc-900 flex items-center justify-center text-[10px] font-medium text-zinc-600 dark:text-zinc-400 -ml-2">+3</div>
             </div>
           </div>
 
-          <div class="demo-content">
-            <div class="demo-text">
-              <p style="margin: 0 0 1rem 0;">// Real-time collaboration in action</p>
-              <p style="margin: 0 0 0.5rem 0;">The hero section needs more <span class="highlight">visual impact</span>.</p>
-              <p style="margin: 0 0 0.5rem 0;">Let's add animated presence indicators and</p>
-              <p style="margin: 0;">make the CTA buttons more prominent.</p>
+          <div class="relative bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-6 min-h-[200px]">
+            <div class="font-mono text-sm text-zinc-600 dark:text-zinc-400 leading-loose">
+              <p class="mb-4">// Real-time collaboration in action</p>
+              <p class="mb-2">The hero section needs more <span class="bg-purple-100 dark:bg-purple-900/50 border-b-2 border-purple-500 px-0.5">visual impact</span>.</p>
+              <p class="mb-2">Let's add animated presence indicators and</p>
+              <p class="mb-4">make the CTA buttons more prominent.</p>
 
-              <div class="typing-indicator">
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <span style="font-size: 0.75rem; color: var(--text-tertiary); margin-left: 0.5rem;">Sarah is typing...</span>
+              <div class="inline-flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-full">
+                <div class="w-1 h-1 bg-zinc-400 rounded-full typing-dot"></div>
+                <div class="w-1 h-1 bg-zinc-400 rounded-full typing-dot"></div>
+                <div class="w-1 h-1 bg-zinc-400 rounded-full typing-dot"></div>
+                <span class="text-xs text-zinc-500 ml-2">Sarah is typing...</span>
               </div>
             </div>
 
             <!-- Animated Cursors -->
-            <div class="cursor cursor-1">
-              <div class="cursor-pointer"></div>
-              <div class="cursor-label">Sarah K.</div>
+            <div class="absolute cursor-1 pointer-events-none z-10">
+              <div class="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[12px] border-l-transparent border-r-transparent border-t-pink-400 -rotate-45"></div>
+              <span class="absolute top-2.5 left-2 px-2 py-0.5 text-[10px] font-medium text-white bg-pink-400 rounded whitespace-nowrap">Sarah K.</span>
             </div>
-            <div class="cursor cursor-2">
-              <div class="cursor-pointer"></div>
-              <div class="cursor-label">John D.</div>
+            <div class="absolute cursor-2 pointer-events-none z-10">
+              <div class="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[12px] border-l-transparent border-r-transparent border-t-blue-400 -rotate-45"></div>
+              <span class="absolute top-2.5 left-2 px-2 py-0.5 text-[10px] font-medium text-white bg-blue-400 rounded whitespace-nowrap">John D.</span>
             </div>
-            <div class="cursor cursor-3">
-              <div class="cursor-pointer"></div>
-              <div class="cursor-label">Alex M.</div>
+            <div class="absolute cursor-3 pointer-events-none z-10">
+              <div class="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[12px] border-l-transparent border-r-transparent border-t-emerald-400 -rotate-45"></div>
+              <span class="absolute top-2.5 left-2 px-2 py-0.5 text-[10px] font-medium text-white bg-emerald-400 rounded whitespace-nowrap">Alex M.</span>
             </div>
           </div>
         </div>
       </section>
 
       <!-- Features Section -->
-      <section id="features" class="features">
-        <div class="section-header">
-          <span class="label">Features</span>
-          <h2 class="display-lg">Everything you need for real-time collaboration</h2>
-          <p class="body-md">Battle-tested primitives that scale from prototype to production.</p>
+      <section id="features" class="py-24 px-6 max-w-6xl mx-auto">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+          <span class="text-xs font-semibold tracking-widest text-emerald-600 dark:text-emerald-400 uppercase mb-4 block">Features</span>
+          <h2 class="font-display text-3xl md:text-4xl lg:text-5xl mb-4">Everything you need for real-time collaboration</h2>
+          <p class="text-zinc-600 dark:text-zinc-400">Battle-tested primitives that scale from prototype to production.</p>
         </div>
 
-        <div class="features-grid">
-          <div class="feature-card">
-            <div class="feature-icon">
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- Feature Card 1 -->
+          <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 shadow-sm hover:shadow-lg dark:hover:shadow-2xl hover:border-emerald-300 dark:hover:border-emerald-700 transition-all hover:-translate-y-1">
+            <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl flex items-center justify-center mb-6 text-emerald-600 dark:text-emerald-400">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="3"/>
                 <circle cx="12" cy="12" r="8" stroke-dasharray="4 2"/>
               </svg>
             </div>
-            <h3 class="feature-title">Presence Tracking</h3>
-            <p class="feature-desc">
+            <h3 class="font-display text-xl mb-3 text-zinc-900 dark:text-white">Presence Tracking</h3>
+            <p class="text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
               Know who's online, what they're viewing, and what they're doing. CRDT-based sync ensures consistency across distributed nodes.
             </p>
-            <div class="feature-metrics">
-              <div class="metric">
-                <span class="metric-value">&lt;50ms</span>
-                <span class="metric-label">Sync latency</span>
+            <div class="flex gap-8 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+              <div>
+                <span class="font-mono text-xl font-semibold text-emerald-600 dark:text-emerald-400">&lt;50ms</span>
+                <span class="text-xs text-zinc-500 block mt-1">Sync latency</span>
               </div>
-              <div class="metric">
-                <span class="metric-value">∞</span>
-                <span class="metric-label">Concurrent users</span>
+              <div>
+                <span class="font-mono text-xl font-semibold text-emerald-600 dark:text-emerald-400">∞</span>
+                <span class="text-xs text-zinc-500 block mt-1">Concurrent users</span>
               </div>
             </div>
           </div>
 
-          <div class="feature-card">
-            <div class="feature-icon">
+          <!-- Feature Card 2 -->
+          <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 shadow-sm hover:shadow-lg dark:hover:shadow-2xl hover:border-emerald-300 dark:hover:border-emerald-700 transition-all hover:-translate-y-1">
+            <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl flex items-center justify-center mb-6 text-emerald-600 dark:text-emerald-400">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
                 <path d="M13 13l6 6"/>
               </svg>
             </div>
-            <h3 class="feature-title">Live Cursors</h3>
-            <p class="feature-desc">
+            <h3 class="font-display text-xl mb-3 text-zinc-900 dark:text-white">Live Cursors</h3>
+            <p class="text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
               See where everyone is working with smooth, labeled cursors. Automatic throttling keeps bandwidth efficient.
             </p>
-            <div class="feature-metrics">
-              <div class="metric">
-                <span class="metric-value">&lt;30ms</span>
-                <span class="metric-label">Broadcast time</span>
+            <div class="flex gap-8 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+              <div>
+                <span class="font-mono text-xl font-semibold text-emerald-600 dark:text-emerald-400">&lt;30ms</span>
+                <span class="text-xs text-zinc-500 block mt-1">Broadcast time</span>
               </div>
-              <div class="metric">
-                <span class="metric-value">60fps</span>
-                <span class="metric-label">Smoothing</span>
+              <div>
+                <span class="font-mono text-xl font-semibold text-emerald-600 dark:text-emerald-400">60fps</span>
+                <span class="text-xs text-zinc-500 block mt-1">Smoothing</span>
               </div>
             </div>
           </div>
 
-          <div class="feature-card">
-            <div class="feature-icon">
+          <!-- Feature Card 3 -->
+          <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 shadow-sm hover:shadow-lg dark:hover:shadow-2xl hover:border-emerald-300 dark:hover:border-emerald-700 transition-all hover:-translate-y-1">
+            <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl flex items-center justify-center mb-6 text-emerald-600 dark:text-emerald-400">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
             </div>
-            <h3 class="feature-title">Threaded Comments</h3>
-            <p class="feature-desc">
+            <h3 class="font-display text-xl mb-3 text-zinc-900 dark:text-white">Threaded Comments</h3>
+            <p class="text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
               Pin discussions to any element. Support for replies, mentions, reactions, and resolution tracking.
             </p>
-            <div class="feature-metrics">
-              <div class="metric">
-                <span class="metric-value">Real-time</span>
-                <span class="metric-label">Sync</span>
+            <div class="flex gap-8 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+              <div>
+                <span class="font-mono text-xl font-semibold text-emerald-600 dark:text-emerald-400">Real-time</span>
+                <span class="text-xs text-zinc-500 block mt-1">Sync</span>
               </div>
-              <div class="metric">
-                <span class="metric-value">@mentions</span>
-                <span class="metric-label">Built-in</span>
+              <div>
+                <span class="font-mono text-xl font-semibold text-emerald-600 dark:text-emerald-400">@mentions</span>
+                <span class="text-xs text-zinc-500 block mt-1">Built-in</span>
               </div>
             </div>
           </div>
 
-          <div class="feature-card">
-            <div class="feature-icon">
+          <!-- Feature Card 4 -->
+          <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 shadow-sm hover:shadow-lg dark:hover:shadow-2xl hover:border-emerald-300 dark:hover:border-emerald-700 transition-all hover:-translate-y-1">
+            <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl flex items-center justify-center mb-6 text-emerald-600 dark:text-emerald-400">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
               </svg>
             </div>
-            <h3 class="feature-title">Notifications</h3>
-            <p class="feature-desc">
+            <h3 class="font-display text-xl mb-3 text-zinc-900 dark:text-white">Notifications</h3>
+            <p class="text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
               Real-time alerts with customizable delivery. Activity feeds, @mentions, and smart batching included.
             </p>
-            <div class="feature-metrics">
-              <div class="metric">
-                <span class="metric-value">Instant</span>
-                <span class="metric-label">Delivery</span>
+            <div class="flex gap-8 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+              <div>
+                <span class="font-mono text-xl font-semibold text-emerald-600 dark:text-emerald-400">Instant</span>
+                <span class="text-xs text-zinc-500 block mt-1">Delivery</span>
               </div>
-              <div class="metric">
-                <span class="metric-value">Webhooks</span>
-                <span class="metric-label">Supported</span>
+              <div>
+                <span class="font-mono text-xl font-semibold text-emerald-600 dark:text-emerald-400">Webhooks</span>
+                <span class="text-xs text-zinc-500 block mt-1">Supported</span>
               </div>
             </div>
           </div>
@@ -1299,31 +407,31 @@ defmodule SyncforgeWeb.LandingLive do
       </section>
 
       <!-- Code Section -->
-      <section id="developers" class="code-section">
-        <div class="code-inner">
-          <div class="section-header">
-            <span class="label">For Developers</span>
-            <h2 class="display-lg">Ship collaboration features in minutes</h2>
-            <p class="body-md">Clean APIs, type-safe SDKs, and comprehensive documentation.</p>
+      <section id="developers" class="py-24 px-6 bg-zinc-50 dark:bg-zinc-900/50">
+        <div class="max-w-6xl mx-auto">
+          <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="text-xs font-semibold tracking-widest text-emerald-600 dark:text-emerald-400 uppercase mb-4 block">For Developers</span>
+            <h2 class="font-display text-3xl md:text-4xl lg:text-5xl mb-4">Ship collaboration features in minutes</h2>
+            <p class="text-zinc-600 dark:text-zinc-400">Clean APIs, type-safe SDKs, and comprehensive documentation.</p>
           </div>
 
-          <div class="code-tabs">
+          <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
             <button
-              class={"code-tab #{if @active_tab == "presence", do: "active", else: ""}"}
+              class={"px-4 py-2 rounded-lg font-mono text-sm border transition-all " <> if(@active_tab == "presence", do: "bg-emerald-600 border-emerald-600 text-white", else: "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-600")}
               phx-click="set_tab"
               phx-value-tab="presence"
             >
               Presence
             </button>
             <button
-              class={"code-tab #{if @active_tab == "cursors", do: "active", else: ""}"}
+              class={"px-4 py-2 rounded-lg font-mono text-sm border transition-all " <> if(@active_tab == "cursors", do: "bg-emerald-600 border-emerald-600 text-white", else: "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-600")}
               phx-click="set_tab"
               phx-value-tab="cursors"
             >
               Cursors
             </button>
             <button
-              class={"code-tab #{if @active_tab == "comments", do: "active", else: ""}"}
+              class={"px-4 py-2 rounded-lg font-mono text-sm border transition-all " <> if(@active_tab == "comments", do: "bg-emerald-600 border-emerald-600 text-white", else: "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-600")}
               phx-click="set_tab"
               phx-value-tab="comments"
             >
@@ -1331,204 +439,177 @@ defmodule SyncforgeWeb.LandingLive do
             </button>
           </div>
 
-          <div class="code-block">
-            <div class="code-header">
-              <div class="code-dot red"></div>
-              <div class="code-dot yellow"></div>
-              <div class="code-dot green"></div>
+          <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm">
+            <div class="flex items-center gap-2 px-4 py-3 bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800">
+              <div class="w-3 h-3 rounded-full bg-red-400"></div>
+              <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+              <div class="w-3 h-3 rounded-full bg-green-400"></div>
             </div>
-            <div class="code-content">
-              <pre><%= raw(code_example(@active_tab)) %></pre>
+            <div class="p-6 overflow-x-auto">
+              <pre class="font-mono text-sm leading-loose text-zinc-800 dark:text-zinc-200"><%= raw(code_example(@active_tab)) %></pre>
             </div>
           </div>
         </div>
       </section>
 
       <!-- Pricing Section -->
-      <section id="pricing" class="pricing">
-        <div class="section-header">
-          <span class="label">Pricing</span>
-          <h2 class="display-lg">Simple, predictable pricing</h2>
-          <p class="body-md">Start free, scale as you grow. No surprise bills.</p>
+      <section id="pricing" class="py-24 px-6 max-w-6xl mx-auto">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+          <span class="text-xs font-semibold tracking-widest text-emerald-600 dark:text-emerald-400 uppercase mb-4 block">Pricing</span>
+          <h2 class="font-display text-3xl md:text-4xl lg:text-5xl mb-4">Simple, predictable pricing</h2>
+          <p class="text-zinc-600 dark:text-zinc-400">Start free, scale as you grow. No surprise bills.</p>
         </div>
 
-        <div class="pricing-grid">
-          <div class="pricing-card">
-            <span class="pricing-name">Free</span>
-            <div class="pricing-price">
-              <span class="pricing-amount">$0</span>
-              <span class="pricing-period">/month</span>
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Free -->
+          <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col">
+            <span class="font-semibold text-zinc-900 dark:text-white mb-2">Free</span>
+            <div class="flex items-baseline gap-1 mb-2">
+              <span class="font-display text-4xl text-zinc-900 dark:text-white">$0</span>
+              <span class="text-sm text-zinc-500">/month</span>
             </div>
-            <p class="pricing-desc">Perfect for trying things out</p>
-            <ul class="pricing-features">
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6 pb-6 border-b border-zinc-100 dark:border-zinc-800">Perfect for trying things out</p>
+            <ul class="space-y-3 mb-8 flex-grow">
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 100 monthly active users
               </li>
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 5 rooms
               </li>
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 Presence & Cursors
               </li>
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 Community support
               </li>
             </ul>
-            <a href="/signup" class="btn btn-secondary">Get started</a>
+            <a href="/signup" class="w-full text-center py-3 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">Get started</a>
           </div>
 
-          <div class="pricing-card">
-            <span class="pricing-name">Starter</span>
-            <div class="pricing-price">
-              <span class="pricing-amount">$49</span>
-              <span class="pricing-period">/month</span>
+          <!-- Starter -->
+          <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col">
+            <span class="font-semibold text-zinc-900 dark:text-white mb-2">Starter</span>
+            <div class="flex items-baseline gap-1 mb-2">
+              <span class="font-display text-4xl text-zinc-900 dark:text-white">$49</span>
+              <span class="text-sm text-zinc-500">/month</span>
             </div>
-            <p class="pricing-desc">For small teams getting started</p>
-            <ul class="pricing-features">
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6 pb-6 border-b border-zinc-100 dark:border-zinc-800">For small teams getting started</p>
+            <ul class="space-y-3 mb-8 flex-grow">
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 1,000 monthly active users
               </li>
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 10 rooms
               </li>
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 Everything in Free
               </li>
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 Email support
               </li>
             </ul>
-            <a href="/signup?plan=starter" class="btn btn-secondary">Start trial</a>
+            <a href="/signup?plan=starter" class="w-full text-center py-3 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">Start trial</a>
           </div>
 
-          <div class="pricing-card featured">
-            <span class="pricing-name">Pro</span>
-            <div class="pricing-price">
-              <span class="pricing-amount">$199</span>
-              <span class="pricing-period">/month</span>
+          <!-- Pro (Featured) -->
+          <div class="bg-white dark:bg-zinc-900 border-2 border-emerald-500 rounded-2xl p-6 shadow-lg relative hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col">
+            <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-xs font-semibold px-3 py-1 rounded-full">Most Popular</span>
+            <span class="font-semibold text-zinc-900 dark:text-white mb-2">Pro</span>
+            <div class="flex items-baseline gap-1 mb-2">
+              <span class="font-display text-4xl text-zinc-900 dark:text-white">$199</span>
+              <span class="text-sm text-zinc-500">/month</span>
             </div>
-            <p class="pricing-desc">For growing products</p>
-            <ul class="pricing-features">
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6 pb-6 border-b border-zinc-100 dark:border-zinc-800">For growing products</p>
+            <ul class="space-y-3 mb-8 flex-grow">
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 10,000 monthly active users
               </li>
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 100 rooms
               </li>
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 Comments & Notifications
               </li>
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 Priority support
               </li>
             </ul>
-            <a href="/signup?plan=pro" class="btn btn-primary">Start trial</a>
+            <a href="/signup?plan=pro" class="w-full text-center py-3 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-medium transition-colors">Start trial</a>
           </div>
 
-          <div class="pricing-card">
-            <span class="pricing-name">Business</span>
-            <div class="pricing-price">
-              <span class="pricing-amount">$499</span>
-              <span class="pricing-period">/month</span>
+          <!-- Business -->
+          <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col">
+            <span class="font-semibold text-zinc-900 dark:text-white mb-2">Business</span>
+            <div class="flex items-baseline gap-1 mb-2">
+              <span class="font-display text-4xl text-zinc-900 dark:text-white">$499</span>
+              <span class="text-sm text-zinc-500">/month</span>
             </div>
-            <p class="pricing-desc">For scale and custom needs</p>
-            <ul class="pricing-features">
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6 pb-6 border-b border-zinc-100 dark:border-zinc-800">For scale and custom needs</p>
+            <ul class="space-y-3 mb-8 flex-grow">
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 50,000 monthly active users
               </li>
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 Unlimited rooms
               </li>
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 Voice rooms & Analytics
               </li>
-              <li>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+              <li class="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 Dedicated support
               </li>
             </ul>
-            <a href="/contact" class="btn btn-secondary">Contact sales</a>
+            <a href="/contact" class="w-full text-center py-3 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">Contact sales</a>
           </div>
         </div>
       </section>
 
       <!-- CTA Section -->
-      <section class="cta-section">
-        <div class="cta-inner">
-          <h2 class="display-md cta-title">Ready to build?</h2>
-          <p class="body-md cta-subtitle">
+      <section class="py-24 px-6 bg-zinc-50 dark:bg-zinc-900/50">
+        <div class="max-w-xl mx-auto text-center">
+          <h2 class="font-display text-3xl md:text-4xl mb-4">Ready to build?</h2>
+          <p class="text-zinc-600 dark:text-zinc-400 mb-8">
             Join hundreds of developers shipping real-time features with SyncForge.
           </p>
-          <form class="cta-form" phx-submit="submit_email">
+          <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" phx-submit="submit_email">
             <input
               type="email"
               name="email"
-              class="cta-input"
+              class="flex-grow px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-full text-zinc-900 dark:text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
               placeholder="Enter your email"
               value={@email}
               required
             />
-            <button type="submit" class="btn btn-primary">Get early access</button>
+            <button type="submit" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-full transition-colors whitespace-nowrap">Get early access</button>
           </form>
         </div>
       </section>
 
       <!-- Footer -->
-      <footer class="footer">
-        <div class="footer-inner">
-          <p class="footer-copy">© 2026 SyncForge. Built with Elixir & Phoenix.</p>
-          <nav class="footer-links">
-            <a href="/docs" class="footer-link">Documentation</a>
-            <a href="/blog" class="footer-link">Blog</a>
-            <a href="https://github.com/syncforge" class="footer-link">GitHub</a>
-            <a href="/privacy" class="footer-link">Privacy</a>
+      <footer class="py-12 px-6 border-t border-zinc-200 dark:border-zinc-800">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+          <p class="text-sm text-zinc-500">© 2026 SyncForge. Built with Elixir & Phoenix.</p>
+          <nav class="flex gap-8">
+            <a href="/docs" class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Documentation</a>
+            <a href="/blog" class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Blog</a>
+            <a href="https://github.com/syncforge" class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">GitHub</a>
+            <a href="/privacy" class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Privacy</a>
           </nav>
         </div>
       </footer>
