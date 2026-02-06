@@ -95,6 +95,8 @@ defmodule SyncforgeWeb.RoomChannel do
 
     Logger.info("User #{user.id} joined room #{room_id}")
 
+    SyncforgeWeb.Telemetry.emit_room_join(%{room_id: room_id})
+
     {:noreply, socket}
   end
 
@@ -502,6 +504,8 @@ defmodule SyncforgeWeb.RoomChannel do
     Throttler.cleanup(room_id, user.id)
 
     Logger.info("User #{user.id} left room #{room_id}")
+
+    SyncforgeWeb.Telemetry.emit_room_leave(%{room_id: room_id})
 
     # Presence is automatically cleaned up by Phoenix.Presence
     :ok

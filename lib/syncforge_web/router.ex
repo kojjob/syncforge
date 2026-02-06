@@ -86,6 +86,13 @@ defmodule SyncforgeWeb.Router do
     end
   end
 
+  # Health check (no auth — used by load balancers and orchestrators)
+  scope "/", SyncforgeWeb do
+    pipe_through :api
+
+    get "/health", HealthController, :show
+  end
+
   # Stripe webhook (no auth — verified by Stripe signature)
   scope "/api/webhooks", SyncforgeWeb do
     pipe_through [:api, :rate_limit_webhook]

@@ -11,10 +11,9 @@ config :syncforge, SyncforgeWeb.Endpoint, cache_static_manifest: "priv/static/ca
 # known as HSTS. If you have a health check endpoint, you may want to exclude it below.
 # Note `:force_ssl` is required to be set at compile-time.
 config :syncforge, SyncforgeWeb.Endpoint,
-  force_ssl: [rewrite_on: [:x_forwarded_proto]],
-  exclude: [
-    # paths: ["/health"],
-    hosts: ["localhost", "127.0.0.1"]
+  force_ssl: [
+    rewrite_on: [:x_forwarded_proto],
+    exclude: ["localhost", "127.0.0.1"]
   ]
 
 # Configure Swoosh API Client
@@ -25,6 +24,9 @@ config :swoosh, local: false
 
 # Do not print debug messages in production
 config :logger, level: :info
+
+# Structured JSON logging for production (machine-parseable for log aggregators)
+config :logger, :default_handler, formatter: {LoggerJSON.Formatters.Basic, []}
 
 # Runtime production configuration, including reading
 # of environment variables, is done on config/runtime.exs.
