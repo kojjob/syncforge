@@ -2,7 +2,7 @@
 
 > Real-Time Collaboration Infrastructure for Developers
 
-**Last Updated**: 2026-02-05
+**Last Updated**: 2026-02-06
 
 ---
 
@@ -17,7 +17,7 @@
 
 ---
 
-## Phase 2: Real-Time Foundation 🚧
+## Phase 2: Real-Time Foundation ✅
 
 ### Phoenix Channels & Presence
 - [x] Create UserSocket with authentication
@@ -36,7 +36,7 @@
 
 ---
 
-## Phase 3: Core Features
+## Phase 3: Core Features ✅
 
 ### Live Cursors
 - [x] Cursor position tracking
@@ -61,7 +61,7 @@
 
 ---
 
-## Phase 4: Authentication & Accounts
+## Phase 4: Authentication & Accounts ✅
 
 ### User Management
 - [x] User schema
@@ -80,28 +80,34 @@
 
 ---
 
-## Phase 5: JavaScript SDK
+## Phase 5: JavaScript SDK ✅
 
-### Core SDK
-- [ ] Vanilla JS SDK structure
-- [ ] WebSocket connection management
-- [ ] Auto-reconnect with exponential backoff
-- [ ] Event system (subscribe/publish)
-- [ ] TypeScript type definitions
+### Core SDK (@syncforge/core) — 212 tests
+- [x] TypeScript types (User, Comment, Reaction, Notification, Activity, CursorPosition, Selection, etc.)
+- [x] TypedEventEmitter with strong typing
+- [x] SyncForgeClient (connect, disconnect, joinRoom, joinNotifications)
+- [x] Room class (join, leave, push, typing indicators, room state hydration)
+- [x] PresenceManager (track joins/leaves, user list, onSync/onJoin/onLeave)
+- [x] CursorManager (throttled ~60fps updates, lerp smoothing, cursor lifecycle)
+- [x] SelectionManager (local/remote selection sync)
+- [x] CommentManager (create/update/delete/resolve, real-time sync)
+- [x] ReactionManager (add/remove/toggle, real-time sync)
+- [x] ActivityManager (paginated list, real-time new activity)
+- [x] NotificationManager (separate channel, list/markRead/markAllRead, unread count)
 
-### React Integration
-- [ ] `usePresence` hook
-- [ ] `useCursors` hook
-- [ ] `useComments` hook
-- [ ] `useRoom` hook
-- [ ] Pre-built React components
+### React Integration (@syncforge/react) — 112 tests
+- [x] SyncForgeProvider (React context, client lifecycle)
+- [x] `useRoom` hook (join/leave, connection status)
+- [x] `usePresence` hook (live user list)
+- [x] `useCursors` hook (cursor positions map)
+- [x] `useComments` hook (comment CRUD + real-time)
+- [x] `useNotifications` hook (notification list + unread count)
 
 ### Pre-built UI Components
-- [ ] Presence avatars (stacked)
-- [ ] Cursor overlay renderer
-- [ ] Comment panel (slide-out)
-- [ ] Comment popovers (inline)
-- [ ] Notification toasts
+- [x] PresenceAvatars (stacked avatar display with overflow)
+- [x] CursorOverlay (remote cursors with labels + colors)
+- [x] CommentPanel (slide-out threaded comments with reactions)
+- [x] NotificationToast (positioned toast notifications with dismiss)
 
 ---
 
@@ -166,39 +172,41 @@
 
 ---
 
-## Current Sprint: Core Features
+## Completed Features
 
-### Completed ✅
-1. **UserSocket** - WebSocket authentication via Phoenix tokens
-2. **RoomChannel** - Real-time channel with cursor & typing events
-3. **Presence** - User presence tracking with CRDT sync
-4. **Room Schema** - Ecto schema with types, config, and metadata
-5. **Room CRUD** - Full CRUD operations with slug generation
-6. **Room Authorization** - Capacity checks and access control
-7. **Cursor Throttling** - Rate-limited cursor broadcasts at ~60fps via Agent GenServer
-8. **Comment Schema** - Threaded comments with anchoring, resolution, and cascade delete
-9. **CI Pipeline** - GitHub Actions for tests and format checking on PRs
-10. **Cursor Labels** - User name and deterministic color in cursor broadcasts
-11. **Real-time Comment Sync** - Channel handlers for comment CRUD with broadcasts
-12. **Room State Persistence** - Push room state (comments, metadata) to users on join
-13. **Client-side Cursor Smoothing** - JavaScript SDK with lerp interpolation and CursorTracking LiveView hook
-14. **Selection Highlighting** - JavaScript SDK with SelectionManager/SelectionRenderer and SelectionTracking LiveView hook
-15. **Reconnection Logic** - JavaScript SDK with ConnectionManager (exponential backoff, state tracking) and ConnectionStatus LiveView hook
-16. **Comment Reactions** - Emoji reactions on comments with toggle support, batch query optimization, and reactions embedded in comment state
-17. **Notifications Context** - Notification schema with 6 types (mention, reply, resolved, reaction, invite, joined), CRUD operations, read/unread tracking, pagination, and cleanup
-18. **Real-time Notification Delivery** - NotificationChannel for instant notifications via Phoenix Channels with mark_read, mark_all_read, and list handlers
-19. **Notification Preferences** - Per-user preference settings for each notification type with get_or_create, should_notify?, and preference-aware creation
-
-20. **Activity Feed** - Room-level activity stream for collaboration event history (create, join, leave, comment, resolve, etc.)
-21. **User Authentication** - User schema with email/password auth, bcrypt hashing, Phoenix.Token sessions, RequireAuth plug, register/login/me API endpoints
-22. **Security Fix** - Room join authorization checks, comment ownership validation for mutations
-23. **Password Reset & Email Verification** - Token-based password reset (1h expiry), email confirmation (7d expiry), SHA-256 hashed tokens in DB, Swoosh email templates
-24. **Pagination & Rescue Fix** - Added pagination to list_comments, narrowed rescue clauses
-25. **Composite Indexes** - Added composite database indexes for common query patterns
-26. **Organizations & Multi-tenancy** - Organization schema with slug auto-gen, Membership with role-based access (owner/admin/member/viewer), API keys with hash-based security (sf_pub_/sf_sec_ prefix), room org-scoping (nullable), REST API with nested routes and authorization
+| # | Feature | PR | Tests |
+|---|---------|-----|-------|
+| 1 | UserSocket — WebSocket auth via Phoenix tokens | — | ✅ |
+| 2 | RoomChannel — Real-time channel with cursor & typing events | — | ✅ |
+| 3 | Presence — User presence tracking with CRDT sync | — | ✅ |
+| 4 | Room Schema — Ecto schema with types, config, metadata | — | ✅ |
+| 5 | Room CRUD — Full CRUD with slug generation | — | ✅ |
+| 6 | Room Authorization — Capacity checks and access control | — | ✅ |
+| 7 | Cursor Throttling — Rate-limited broadcasts ~60fps via Agent GenServer | — | ✅ |
+| 8 | Comment Schema — Threaded comments with anchoring, resolution | — | ✅ |
+| 9 | CI Pipeline — GitHub Actions for tests and format checking | — | ✅ |
+| 10 | Cursor Labels — User name and deterministic color in broadcasts | — | ✅ |
+| 11 | Real-time Comment Sync — Channel handlers for comment CRUD | — | ✅ |
+| 12 | Room State Persistence — Push room state on join | — | ✅ |
+| 13 | Client-side Cursor Smoothing — JS SDK lerp interpolation | — | ✅ |
+| 14 | Selection Highlighting — SelectionManager/Renderer + LiveView hook | — | ✅ |
+| 15 | Reconnection Logic — ConnectionManager with exponential backoff | — | ✅ |
+| 16 | Comment Reactions — Emoji toggle, batch queries, embedded state | — | ✅ |
+| 17 | Notifications Context — 6 types, CRUD, read/unread, pagination | — | ✅ |
+| 18 | Notification Delivery — NotificationChannel with real-time push | — | ✅ |
+| 19 | Notification Preferences — Per-user settings, should_notify? | — | ✅ |
+| 20 | Activity Feed — Room-level activity stream | — | ✅ |
+| 21 | User Authentication — Email/password, bcrypt, Phoenix.Token | PR #15 | ✅ |
+| 22 | Security Fix — Room join auth, comment ownership checks | PR #16 | ✅ |
+| 23 | Password Reset & Email Verification — Token-based flows | PR #17 | ✅ |
+| 24 | Pagination & Rescue Fix — list_comments pagination | — | ✅ |
+| 25 | Composite Indexes — Database indexes for common queries | — | ✅ |
+| 26 | Organizations & Multi-tenancy — Orgs, memberships, API keys, RBAC | PR #20 | ✅ |
+| 27 | RBAC Room Channel — Org-aware join, viewer write restrictions | PR #21 | ✅ |
+| 28 | JavaScript SDK — @syncforge/core + @syncforge/react | PR #22 | 324 tests |
 
 ### Up Next
-- Phase 5: JavaScript SDK
+- Phase 6: Developer Experience (Dashboard, Documentation)
 
 ---
 
