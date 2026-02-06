@@ -26,12 +26,13 @@ defmodule Syncforge.Accounts.User do
   A changeset for user registration.
   Validates email format, password length, hashes password, and downcases email.
   """
-  def registration_changeset(user, attrs) do
+  def registration_changeset(user, attrs, opts \\ []) do
     user
     |> cast(attrs, [:email, :password, :name, :avatar_url])
     |> validate_required([:email, :password, :name])
     |> validate_email()
     |> validate_password()
+    |> maybe_hash_password(opts)
   end
 
   @doc """
@@ -47,12 +48,12 @@ defmodule Syncforge.Accounts.User do
   A changeset for resetting a user's password.
   Validates length and hashes the new password.
   """
-  def password_changeset(user, attrs) do
+  def password_changeset(user, attrs, opts \\ []) do
     user
     |> cast(attrs, [:password])
     |> validate_required([:password])
     |> validate_length(:password, min: 8)
-    |> hash_password()
+    |> maybe_hash_password(opts)
   end
 
   @doc """
@@ -89,19 +90,19 @@ defmodule Syncforge.Accounts.User do
   end
 
   defp validate_password(changeset) do
-    changeset
-    |> validate_length(:password, min: 8)
-    |> hash_password()
+    validate_length(changeset, :password, min: 8)
   end
 
-  defp hash_password(changeset) do
-    case get_change(changeset, :password) do
-      nil ->
-        changeset
+  defp maybe_hash_password(changeset, opts) do
+    hash_password? = Keyword.get(opts, :hash_password, true)
 
-      password ->
-        changeset
-        |> put_change(:password_hash, Bcrypt.hash_pwd_salt(password))
+    if hash_password? && changeset.valid? do
+      case get_change(changeset, :password) do
+        nil -> changeset
+        password -> put_change(changeset, :password_hash, Bcrypt.hash_pwd_salt(password))
+      end
+    else
+      changeset
     end
   end
 end

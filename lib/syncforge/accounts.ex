@@ -81,7 +81,7 @@ defmodule Syncforge.Accounts do
   Returns a registration changeset for use in forms or validation.
   """
   def change_user_registration(%User{} = user, attrs \\ %{}) do
-    User.registration_changeset(user, attrs)
+    User.registration_changeset(user, attrs, hash_password: false)
   end
 
   # ── Password Reset ──

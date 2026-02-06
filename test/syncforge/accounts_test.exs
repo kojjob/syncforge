@@ -4,7 +4,25 @@ defmodule Syncforge.AccountsTest do
   alias Syncforge.Accounts
   alias Syncforge.Accounts.User
 
+  import Ecto.Changeset, only: [get_change: 2]
   import Syncforge.AccountsFixtures
+
+  describe "change_user_registration/2" do
+    test "does not hash password during validation (performance)" do
+      attrs = %{email: "test@example.com", password: "valid_password123", name: "Test User"}
+      changeset = Accounts.change_user_registration(%User{}, attrs)
+
+      # Password should be validated but NOT hashed during form validation
+      assert changeset.valid?
+      assert get_change(changeset, :password) == "valid_password123"
+      refute get_change(changeset, :password_hash)
+    end
+
+    test "returns a changeset with validations" do
+      changeset = Accounts.change_user_registration(%User{})
+      assert %Ecto.Changeset{} = changeset
+    end
+  end
 
   describe "register_user/1" do
     test "with valid data creates user" do
