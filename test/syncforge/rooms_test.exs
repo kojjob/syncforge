@@ -4,6 +4,9 @@ defmodule Syncforge.RoomsTest do
   alias Syncforge.Rooms
   alias Syncforge.Rooms.Room
 
+  import Syncforge.AccountsFixtures
+  import Syncforge.OrganizationsFixtures
+
   describe "rooms" do
     @valid_attrs %{
       name: "Design Review",
@@ -173,7 +176,7 @@ defmodule Syncforge.RoomsTest do
 
     test "allows joining a public room" do
       room = room_fixture(%{is_public: true, max_participants: 10})
-      assert {:ok, returned_room} = Rooms.authorize_join(room.id, nil)
+      assert {:ok, returned_room, nil} = Rooms.authorize_join(room.id, nil)
       assert returned_room.id == room.id
     end
 
@@ -193,14 +196,14 @@ defmodule Syncforge.RoomsTest do
       room = room_fixture(%{is_public: true, max_participants: 10})
       # Simulate some participants but not full
       opts = [current_participant_count: 5]
-      assert {:ok, returned_room} = Rooms.authorize_join(room.id, nil, opts)
+      assert {:ok, returned_room, nil} = Rooms.authorize_join(room.id, nil, opts)
       assert returned_room.id == room.id
     end
 
     test "allows joining when room has exactly one spot left" do
       room = room_fixture(%{is_public: true, max_participants: 5})
       opts = [current_participant_count: 4]
-      assert {:ok, _room} = Rooms.authorize_join(room.id, nil, opts)
+      assert {:ok, _room, nil} = Rooms.authorize_join(room.id, nil, opts)
     end
 
     test "denies joining when room is over capacity" do
@@ -208,6 +211,101 @@ defmodule Syncforge.RoomsTest do
       # Edge case: somehow count exceeds max
       opts = [current_participant_count: 10]
       assert {:error, :room_full} = Rooms.authorize_join(room.id, nil, opts)
+    end
+  end
+
+  describe "authorize_join/3 with organization rooms" do
+    setup do
+      # Create a real DB user and org
+      owner = user_fixture()
+      {org, _owner} = organization_fixture(owner)
+
+      # Create a member
+      member = user_fixture(%{email: "member-#{System.unique_integer([:positive])}@example.com"})
+      membership_fixture(org, member, %{role: "member"})
+
+      # Create a viewer
+      viewer = user_fixture(%{email: "viewer-#{System.unique_integer([:positive])}@example.com"})
+      membership_fixture(org, viewer, %{role: "viewer"})
+
+      # Create an outsider (no membership)
+      outsider =
+        user_fixture(%{email: "outsider-#{System.unique_integer([:positive])}@example.com"})
+
+      # Create an invited (non-active) member
+      invited =
+        user_fixture(%{email: "invited-#{System.unique_integer([:positive])}@example.com"})
+
+      {:ok, invited_membership} = Syncforge.Organizations.add_member(org, invited.id, "member")
+      # Set status to invited by updating directly
+      invited_membership
+      |> Ecto.Changeset.change(%{status: "invited"})
+      |> Syncforge.Repo.update!()
+
+      # Create a suspended member
+      suspended =
+        user_fixture(%{email: "suspended-#{System.unique_integer([:positive])}@example.com"})
+
+      {:ok, suspended_membership} =
+        Syncforge.Organizations.add_member(org, suspended.id, "member")
+
+      suspended_membership
+      |> Ecto.Changeset.change(%{status: "suspended"})
+      |> Syncforge.Repo.update!()
+
+      %{
+        org: org,
+        owner: owner,
+        member: member,
+        viewer: viewer,
+        outsider: outsider,
+        invited: invited,
+        suspended: suspended
+      }
+    end
+
+    test "allows any user to join public org room with nil role for non-member", %{
+      org: org,
+      outsider: outsider
+    } do
+      room = room_fixture(%{is_public: true, organization_id: org.id})
+      assert {:ok, returned_room, nil} = Rooms.authorize_join(room.id, outsider)
+      assert returned_room.id == room.id
+    end
+
+    test "returns member role for org member joining public org room", %{org: org, member: member} do
+      room = room_fixture(%{is_public: true, organization_id: org.id})
+      assert {:ok, _room, "member"} = Rooms.authorize_join(room.id, member)
+    end
+
+    test "returns owner role for org owner joining public org room", %{org: org, owner: owner} do
+      room = room_fixture(%{is_public: true, organization_id: org.id})
+      assert {:ok, _room, "owner"} = Rooms.authorize_join(room.id, owner)
+    end
+
+    test "denies non-member from private org room", %{org: org, outsider: outsider} do
+      room = room_fixture(%{is_public: false, organization_id: org.id})
+      assert {:error, :unauthorized} = Rooms.authorize_join(room.id, outsider)
+    end
+
+    test "allows active member to join private org room", %{org: org, member: member} do
+      room = room_fixture(%{is_public: false, organization_id: org.id})
+      assert {:ok, _room, "member"} = Rooms.authorize_join(room.id, member)
+    end
+
+    test "allows viewer to join private org room", %{org: org, viewer: viewer} do
+      room = room_fixture(%{is_public: false, organization_id: org.id})
+      assert {:ok, _room, "viewer"} = Rooms.authorize_join(room.id, viewer)
+    end
+
+    test "denies invited (non-active) member from private org room", %{org: org, invited: invited} do
+      room = room_fixture(%{is_public: false, organization_id: org.id})
+      assert {:error, :unauthorized} = Rooms.authorize_join(room.id, invited)
+    end
+
+    test "denies suspended member from private org room", %{org: org, suspended: suspended} do
+      room = room_fixture(%{is_public: false, organization_id: org.id})
+      assert {:error, :unauthorized} = Rooms.authorize_join(room.id, suspended)
     end
   end
 
