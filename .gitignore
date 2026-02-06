@@ -38,3 +38,8 @@ syncforge-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# SDK packages
+/packages/*/node_modules/
+/packages/*/dist/
+/packages/*/bun.lock
+
