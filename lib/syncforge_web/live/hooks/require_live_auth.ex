@@ -2,8 +2,8 @@ defmodule SyncforgeWeb.Live.Hooks.RequireLiveAuth do
   @moduledoc """
   An `on_mount` hook that requires a user to be authenticated via browser session.
 
-  Loads the current user from the session token and assigns it to the socket.
-  Redirects to `/login` if no valid session exists.
+  Loads the current user from the `user_id` stored in the session and assigns
+  it to the socket. Redirects to `/login` if no valid session exists.
 
   ## Usage
 
