@@ -41,6 +41,20 @@ defmodule SyncforgeWeb.Router do
 
     get "/me", AuthController, :me
     post "/resend-confirmation", AuthController, :resend_confirmation
+
+    # Organization CRUD
+    resources "/organizations", OrganizationController,
+      only: [:create, :index, :show, :update, :delete] do
+      # Membership management
+      post "/members", OrganizationController, :add_member
+      delete "/members/:user_id", OrganizationController, :remove_member
+      put "/members/:user_id/role", OrganizationController, :update_member_role
+
+      # API key management
+      post "/api-keys", OrganizationController, :create_api_key
+      get "/api-keys", OrganizationController, :list_api_keys
+      delete "/api-keys/:id", OrganizationController, :revoke_api_key
+    end
   end
 
   # Enable Swoosh mailbox preview in development
