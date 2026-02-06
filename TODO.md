@@ -2,7 +2,7 @@
 
 > Real-Time Collaboration Infrastructure for Developers
 
-**Last Updated**: 2026-02-06 (Phase 7 complete)
+**Last Updated**: 2026-02-06 (Phase 8 complete)
 
 ---
 
@@ -164,29 +164,39 @@
 
 ---
 
-## Phase 8: Production Readiness
+## Phase 8: Production Readiness ✅
 
-### Performance
-- [ ] Load testing (WebSocket connections)
-- [ ] Presence sync <50ms (p95)
-- [ ] Cursor broadcast <30ms (p95)
-- [ ] Connection pooling optimization
-- [ ] Database query optimization
+### 8.1 Performance Optimization (PR #33)
+- [x] ETS cursor throttler (GenServer + ETS replaces Agent for concurrent reads/writes)
+- [x] Socket assigns caching (org/plan data cached at join, no DB queries per action)
+- [x] Slow query logging (telemetry handler for queries >100ms dev / >200ms prod)
+- [x] Composite indexes (organization_id, event_type, inserted_at on connection_events)
+- [x] Database SSL + pool tuning (configurable via env vars)
 
-### Security
-- [ ] Security audit
-- [ ] Rate limiting
-- [ ] Input validation hardening
-- [ ] CORS configuration
-- [ ] API key rotation
+### 8.2 Security Hardening (PR #34)
+- [x] Input validation (ParamSanitizer plug — null byte rejection, string length limits, depth limits)
+- [x] Security headers (CSP with per-request nonces, Referrer-Policy, Permissions-Policy)
+- [x] Rate limiting (Hammer 7.0 — IP-based for auth, user-based for API, channel event limits)
+- [x] CORS configuration (Corsica 2.1 — configurable origins via ALLOWED_ORIGINS env var)
+- [x] API key rotation (24h grace period, POST /api/organizations/:org_id/api-keys/:id/rotate)
+- [x] WebSocket frame limits (max_frame_size: 65_536, compress: true)
+- [x] Request body size limit (1MB on Plug.Parsers)
 
-### Deployment
-- [ ] Fly.io configuration
-- [x] CI pipeline (GitHub Actions - tests, format)
-- [ ] CD pipeline (staging/production deploy)
-- [ ] Monitoring (Telemetry)
-- [ ] Error tracking
-- [ ] Automated backups
+### 8.3 Observability (PR #35)
+- [x] Health check endpoint (GET /health — DB connectivity check, 200/503)
+- [x] Custom telemetry metrics (room join/leave counters, channel message counter, presence/room gauges)
+- [x] Structured JSON logging (LoggerJSON 7.0 for production)
+- [x] Error tracking (Sentry v10 — Logger-based, activated by SENTRY_DSN env var)
+- [x] Logger metadata (user_id, room_id added to all log entries)
+
+### 8.4 Deployment (PR #36)
+- [x] OTP release module (Syncforge.Release — migrate/0, rollback/2 without Mix)
+- [x] Multi-stage Dockerfile (hexpm/elixir builder + debian slim runner, nobody user)
+- [x] Fly.io configuration (fly.toml — iad region, rolling deploy, auto-stop/start)
+- [x] BEAM clustering (rel/env.sh.eex — DNS-based node discovery on Fly.io)
+- [x] Release scripts (rel/overlays/bin/server, rel/overlays/bin/migrate)
+- [x] CI pipeline (GitHub Actions — tests, format, compile)
+- [x] CD pipeline (GitHub Actions — deploy to Fly.io on push to main)
 
 ---
 
@@ -200,7 +210,7 @@
 | 4 | Room Schema — Ecto schema with types, config, metadata | — | ✅ |
 | 5 | Room CRUD — Full CRUD with slug generation | — | ✅ |
 | 6 | Room Authorization — Capacity checks and access control | — | ✅ |
-| 7 | Cursor Throttling — Rate-limited broadcasts ~60fps via Agent GenServer | — | ✅ |
+| 7 | Cursor Throttling — Rate-limited broadcasts ~60fps via ETS-backed GenServer | — | ✅ |
 | 8 | Comment Schema — Threaded comments with anchoring, resolution | — | ✅ |
 | 9 | CI Pipeline — GitHub Actions for tests and format checking | — | ✅ |
 | 10 | Cursor Labels — User name and deterministic color in broadcasts | — | ✅ |
@@ -231,16 +241,21 @@
 | 35 | Bcrypt Perf Fix — Skip password hashing during LiveView validate events | PR #30 | ✅ |
 | 36 | Phase 6 Merge — All dashboard features merged to main | PR #31 | ✅ |
 | 37 | Phase 7 Billing & Plans — Stripe integration, plan enforcement, billing dashboard | PR #32 | 87 tests |
+| 38 | Phase 8.1 Performance — ETS throttler, socket caching, slow query logging, indexes | PR #33 | ✅ |
+| 39 | Phase 8.2 Security — Rate limiting, CORS, CSP headers, param sanitizer, API key rotation | PR #34 | ✅ |
+| 40 | Phase 8.3 Observability — Health check, custom telemetry, JSON logging, Sentry | PR #35 | 10 tests |
+| 41 | Phase 8.4 Deployment — OTP release, Dockerfile, fly.toml, CD pipeline | PR #36 | 2 tests |
 
 ### Test Totals
-- **633 Elixir tests** (0 failures)
+- **686 Elixir tests** (0 failures)
 - **212 @syncforge/core tests** (TypeScript)
 - **112 @syncforge/react tests** (TypeScript)
-- **Total: 957 tests**
+- **Total: 1,010 tests**
 
 ### Up Next
-- Phase 8: Production Readiness (load testing, security audit, deployment)
-- Phase 6 gap: Documentation (SDK guide, quick start, API reference)
+- Phase 6 gap: Documentation (SDK guide, quick start, API reference, example apps)
+- Phase 9: Advanced Features (CRDT document sync, voice rooms, screen recording)
+- Load testing with real WebSocket connections at scale
 
 ---
 
@@ -251,6 +266,18 @@
 | Unused `socket` warnings | Low | 3 warnings in room_channel_test.exs (lines 333, 418, 683) |
 | Duplicated `pick_org/2` | Low | Same helper copy-pasted across 6 LiveViews — extract to shared module |
 | Comment popovers | Low | Inline comment popover UI component not yet built |
+
+---
+
+## Production Dependencies Added (Phase 8)
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `hammer` | `~> 7.0` | Rate limiting (ETS backend) |
+| `hammer_plug` | `~> 3.0` | Plug integration for Hammer |
+| `corsica` | `~> 2.1` | CORS configuration |
+| `logger_json` | `~> 7.0` | Structured JSON logging |
+| `sentry` | `~> 10.0` | Error tracking |
 
 ---
 
