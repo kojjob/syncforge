@@ -29,6 +29,12 @@ defmodule SyncforgeWeb.UserSessionController do
     end
   end
 
+  def create(conn, _params) do
+    conn
+    |> put_flash(:error, "Invalid email or password.")
+    |> redirect(to: "/login")
+  end
+
   def delete(conn, _params) do
     conn
     |> renew_session()
