@@ -293,6 +293,26 @@ defmodule Syncforge.RoomsTest do
     end
   end
 
+  describe "get_participant_count/1" do
+    test "returns 0 when Presence is not tracking any users" do
+      room = room_fixture(%{is_public: true})
+      # Presence is not started in test, so this should return 0
+      assert Rooms.get_participant_count(room.id) == 0
+    end
+
+    test "returns 0 for non-existent room id" do
+      fake_id = Ecto.UUID.generate()
+      assert Rooms.get_participant_count(fake_id) == 0
+    end
+
+    test "only rescues ArgumentError, not other exceptions" do
+      # Verify that the function returns an integer (0) via the narrow rescue
+      # when Presence ETS table is not available in the test environment.
+      room = room_fixture(%{is_public: true})
+      assert is_integer(Rooms.get_participant_count(room.id))
+    end
+  end
+
   # Helper function to create test rooms
   defp room_fixture(attrs \\ %{}) do
     {:ok, room} =

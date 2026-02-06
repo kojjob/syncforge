@@ -385,7 +385,9 @@ defmodule Syncforge.Rooms do
     # Use the Presence helper function which handles all edge cases
     SyncforgeWeb.Presence.room_user_count(room_id)
   rescue
-    # Handle cases where Presence isn't running (e.g., in some tests)
-    _ -> 0
+    # Only rescue ArgumentError, which occurs when the Presence ETS table
+    # doesn't exist (e.g., Presence tracker not started in test environment).
+    # Other exceptions (RuntimeError, etc.) should propagate normally.
+    ArgumentError -> 0
   end
 end
