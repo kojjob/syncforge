@@ -55,8 +55,8 @@ defmodule SyncforgeWeb.Router do
       live "/dashboard", DashboardLive
       live "/dashboard/rooms", RoomsLive
       live "/dashboard/api-keys", ApiKeysLive
-      live "/dashboard/analytics", DashboardLive, :analytics
-      live "/dashboard/logs", DashboardLive, :logs
+      live "/dashboard/analytics", AnalyticsLive
+      live "/dashboard/logs", LogsLive
     end
   end
 
