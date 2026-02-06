@@ -16,6 +16,8 @@ defmodule Syncforge.Application do
       SyncforgeWeb.Presence,
       # Cursor throttling for rate-limiting cursor broadcasts
       {Syncforge.Cursors.Throttler, interval_ms: cursor_throttle_interval()},
+      # HTTP rate limiting (Hammer 7 ETS backend)
+      Syncforge.RateLimiter,
       # Start to serve requests, typically the last entry
       SyncforgeWeb.Endpoint
     ]

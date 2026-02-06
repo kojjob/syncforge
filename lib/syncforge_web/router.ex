@@ -8,10 +8,35 @@ defmodule SyncforgeWeb.Router do
     plug :put_root_layout, html: {SyncforgeWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug SyncforgeWeb.Plugs.SecurityHeaders, mode: :browser
   end
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug SyncforgeWeb.Plugs.SecurityHeaders, mode: :api
+    plug SyncforgeWeb.Plugs.ParamSanitizer
+  end
+
+  # Rate limiting pipelines
+  pipeline :rate_limit_public_auth do
+    plug SyncforgeWeb.Plugs.RateLimiter,
+      limit: 10,
+      scale: 60_000,
+      by: :ip
+  end
+
+  pipeline :rate_limit_webhook do
+    plug SyncforgeWeb.Plugs.RateLimiter,
+      limit: 100,
+      scale: 60_000,
+      by: :ip
+  end
+
+  pipeline :rate_limit_protected do
+    plug SyncforgeWeb.Plugs.RateLimiter,
+      limit: 300,
+      scale: 60_000,
+      by: :user
   end
 
   scope "/", SyncforgeWeb do
@@ -63,14 +88,14 @@ defmodule SyncforgeWeb.Router do
 
   # Stripe webhook (no auth — verified by Stripe signature)
   scope "/api/webhooks", SyncforgeWeb do
-    pipe_through :api
+    pipe_through [:api, :rate_limit_webhook]
 
     post "/stripe", StripeWebhookController, :handle
   end
 
   # Public auth endpoints (no authentication required)
   scope "/api", SyncforgeWeb do
-    pipe_through :api
+    pipe_through [:api, :rate_limit_public_auth]
 
     post "/register", AuthController, :register
     post "/login", AuthController, :login
@@ -81,7 +106,7 @@ defmodule SyncforgeWeb.Router do
 
   # Protected API endpoints (Bearer token required)
   scope "/api", SyncforgeWeb do
-    pipe_through [:api, SyncforgeWeb.Plugs.RequireAuth]
+    pipe_through [:api, SyncforgeWeb.Plugs.RequireAuth, :rate_limit_protected]
 
     get "/me", AuthController, :me
     post "/resend-confirmation", AuthController, :resend_confirmation
@@ -98,6 +123,7 @@ defmodule SyncforgeWeb.Router do
       post "/api-keys", OrganizationController, :create_api_key
       get "/api-keys", OrganizationController, :list_api_keys
       delete "/api-keys/:id", OrganizationController, :revoke_api_key
+      post "/api-keys/:id/rotate", OrganizationController, :rotate_api_key
     end
 
     # Billing management (scoped to org, requires owner/admin)

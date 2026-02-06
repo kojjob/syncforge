@@ -67,6 +67,8 @@ defmodule Syncforge.MixProject do
       {:bandit, "~> 1.5"},
       {:bcrypt_elixir, "~> 3.0"},
       {:stripity_stripe, "~> 3.2"},
+      {:hammer, "~> 7.2"},
+      {:corsica, "~> 2.1"},
       {:mox, "~> 1.0", only: :test}
     ]
   end

@@ -228,6 +228,36 @@ defmodule SyncforgeWeb.OrganizationController do
     end
   end
 
+  def rotate_api_key(conn, %{"organization_id" => org_id, "id" => key_id}) do
+    current_user = conn.assigns.current_user
+
+    with org when not is_nil(org) <- Organizations.get_organization(org_id),
+         true <- Organizations.user_has_role?(org_id, current_user.id, ["owner", "admin"]) do
+      case Organizations.rotate_api_key(org, key_id) do
+        {:ok, new_key, raw_key, _rotated_old} ->
+          conn
+          |> put_view(SyncforgeWeb.OrganizationJSON)
+          |> render("api_key.json", api_key: new_key, raw_key: raw_key)
+
+        {:error, :key_not_found} ->
+          conn |> put_status(:not_found) |> json(%{error: "API key not found"})
+
+        {:error, :key_not_active} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{error: "Only active keys can be rotated (key is not active)"})
+
+        {:error, _other} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{error: "Failed to rotate API key"})
+      end
+    else
+      nil -> conn |> put_status(:not_found) |> json(%{error: "Organization not found"})
+      false -> conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
+    end
+  end
+
   def revoke_api_key(conn, %{"organization_id" => org_id, "id" => key_id}) do
     current_user = conn.assigns.current_user
 
