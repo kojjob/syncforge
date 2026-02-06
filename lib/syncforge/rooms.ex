@@ -305,6 +305,27 @@ defmodule Syncforge.Rooms do
 
   defp lookup_membership_role(_org_id, _user), do: nil
 
+  # --- Dashboard Helpers ---
+
+  @doc """
+  Lists rooms belonging to an organization, ordered by most recent.
+  """
+  def list_rooms_for_organization(org_id) do
+    Room
+    |> where([r], r.organization_id == ^org_id)
+    |> order_by([r], desc: r.inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
+  Counts rooms belonging to an organization.
+  """
+  def count_rooms_for_organization(org_id) do
+    Room
+    |> where([r], r.organization_id == ^org_id)
+    |> Repo.aggregate(:count)
+  end
+
   @doc """
   Returns the current state of a room for syncing to joining users.
 

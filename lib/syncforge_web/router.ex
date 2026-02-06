@@ -50,8 +50,13 @@ defmodule SyncforgeWeb.Router do
     pipe_through :browser
 
     live_session :authenticated,
-      on_mount: [{SyncforgeWeb.Live.Hooks.RequireLiveAuth, :require_auth}] do
+      on_mount: [{SyncforgeWeb.Live.Hooks.RequireLiveAuth, :require_auth}],
+      layout: {SyncforgeWeb.Layouts, :dashboard} do
       live "/dashboard", DashboardLive
+      live "/dashboard/rooms", DashboardLive, :rooms
+      live "/dashboard/api-keys", DashboardLive, :api_keys
+      live "/dashboard/analytics", DashboardLive, :analytics
+      live "/dashboard/logs", DashboardLive, :logs
     end
   end
 

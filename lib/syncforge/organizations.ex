@@ -212,6 +212,37 @@ defmodule Syncforge.Organizations do
     Repo.all(query)
   end
 
+  # --- Dashboard Helpers ---
+
+  @doc """
+  Counts active members in an organization.
+  """
+  def count_members(org_id) do
+    Membership
+    |> where([m], m.organization_id == ^org_id and m.status == "active")
+    |> Repo.aggregate(:count)
+  end
+
+  @doc """
+  Lists active members in an organization with their user preloaded.
+  """
+  def list_members(org_id) do
+    Membership
+    |> where([m], m.organization_id == ^org_id and m.status == "active")
+    |> preload(:user)
+    |> order_by([m], asc: m.inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
+  Counts active API keys for an organization.
+  """
+  def count_api_keys(org_id) do
+    ApiKey
+    |> where([k], k.organization_id == ^org_id and k.status == "active")
+    |> Repo.aggregate(:count)
+  end
+
   # --- Private Helpers ---
 
   defp count_owners(org_id) do
