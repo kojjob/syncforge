@@ -132,6 +132,12 @@ defmodule SyncforgeWeb.Layouts do
           >
             <.icon name="hero-document-text" class="size-5" /> Logs
           </.link>
+          <.link
+            navigate={~p"/dashboard/billing"}
+            class={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors #{if @active_nav == :billing, do: "bg-primary text-primary-content", else: "hover:bg-base-300"}"}
+          >
+            <.icon name="hero-credit-card" class="size-5" /> Billing
+          </.link>
         </nav>
 
         <%!-- User section --%>

@@ -60,6 +60,19 @@ config :logger, :default_formatter,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# Stripe billing configuration
+config :stripity_stripe, api_key: System.get_env("STRIPE_SECRET_KEY")
+
+config :syncforge, :stripe_client, Syncforge.Billing.StripeClient.Live
+
+config :syncforge, :stripe_prices, %{
+  starter: System.get_env("STRIPE_PRICE_STARTER") || "price_starter",
+  pro: System.get_env("STRIPE_PRICE_PRO") || "price_pro",
+  business: System.get_env("STRIPE_PRICE_BUSINESS") || "price_business"
+}
+
+config :syncforge, :stripe_webhook_secret, System.get_env("STRIPE_WEBHOOK_SECRET")
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

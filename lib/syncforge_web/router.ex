@@ -57,7 +57,15 @@ defmodule SyncforgeWeb.Router do
       live "/dashboard/api-keys", ApiKeysLive
       live "/dashboard/analytics", AnalyticsLive
       live "/dashboard/logs", LogsLive
+      live "/dashboard/billing", BillingLive
     end
+  end
+
+  # Stripe webhook (no auth — verified by Stripe signature)
+  scope "/api/webhooks", SyncforgeWeb do
+    pipe_through :api
+
+    post "/stripe", StripeWebhookController, :handle
   end
 
   # Public auth endpoints (no authentication required)
@@ -90,6 +98,13 @@ defmodule SyncforgeWeb.Router do
       post "/api-keys", OrganizationController, :create_api_key
       get "/api-keys", OrganizationController, :list_api_keys
       delete "/api-keys/:id", OrganizationController, :revoke_api_key
+    end
+
+    # Billing management (scoped to org, requires owner/admin)
+    scope "/organizations/:org_id/billing", as: :billing do
+      post "/checkout", BillingController, :create_checkout_session
+      post "/portal", BillingController, :create_portal_session
+      get "/subscription", BillingController, :show_subscription
     end
   end
 

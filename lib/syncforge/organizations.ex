@@ -85,6 +85,7 @@ defmodule Syncforge.Organizations do
     Organization
     |> join(:inner, [o], m in Membership, on: m.organization_id == o.id)
     |> where([_o, m], m.user_id == ^user_id and m.status == "active")
+    |> order_by([o], asc: o.name)
     |> Repo.all()
   end
 

@@ -52,17 +52,18 @@ defmodule SyncforgeWeb.RoomChannel do
 
   @impl true
   def join("room:" <> room_id, _params, socket) do
-    case Syncforge.Rooms.authorize_join(room_id, socket.assigns.current_user) do
-      {:ok, room, role} ->
-        send(self(), :after_join)
+    with {:ok, room, role} <-
+           Syncforge.Rooms.authorize_join(room_id, socket.assigns.current_user),
+         :ok <- check_connection_limit(room) do
+      send(self(), :after_join)
 
-        socket =
-          socket
-          |> assign(:room_id, room.id)
-          |> assign(:membership_role, role)
+      socket =
+        socket
+        |> assign(:room_id, room.id)
+        |> assign(:membership_role, role)
 
-        {:ok, %{presence: %{}}, socket}
-
+      {:ok, %{presence: %{}}, socket}
+    else
       {:error, reason} ->
         {:error, %{reason: reason}}
     end
@@ -218,6 +219,7 @@ defmodule SyncforgeWeb.RoomChannel do
   @impl true
   def handle_in("comment:create", params, socket) do
     if not can_write?(socket), do: throw(:forbidden)
+    if check_feature(socket, :comments) != :ok, do: throw(:feature_not_available)
 
     user = socket.assigns.current_user
     room_id = socket.assigns.room_id
@@ -247,6 +249,7 @@ defmodule SyncforgeWeb.RoomChannel do
     end
   catch
     :forbidden -> {:reply, {:error, %{reason: :forbidden}}, socket}
+    :feature_not_available -> {:reply, {:error, %{reason: :feature_not_available}}, socket}
   end
 
   @impl true
@@ -507,6 +510,41 @@ defmodule SyncforgeWeb.RoomChannel do
   # Viewers can read (presence, activities) but cannot write (cursors, comments, reactions)
   # nil role (no org or non-member of public room) is allowed to write for backward compat
   defp can_write?(socket), do: socket.assigns.membership_role != "viewer"
+
+  # Check MAU limit for rooms belonging to an organization
+  defp check_connection_limit(%{organization_id: nil}), do: :ok
+
+  defp check_connection_limit(%{organization_id: org_id}) do
+    case Syncforge.Repo.get(Syncforge.Accounts.Organization, org_id) do
+      nil -> :ok
+      org -> Syncforge.Billing.can_connect?(org)
+    end
+  end
+
+  # Check feature availability for rooms belonging to an organization
+  defp check_feature(socket, feature) do
+    room_id = socket.assigns.room_id
+    room = Syncforge.Rooms.get_room(room_id)
+
+    case room do
+      %{organization_id: nil} ->
+        :ok
+
+      %{organization_id: org_id} ->
+        case Syncforge.Repo.get(Syncforge.Accounts.Organization, org_id) do
+          nil ->
+            :ok
+
+          org ->
+            if Syncforge.Billing.feature_enabled?(org, feature),
+              do: :ok,
+              else: {:error, :feature_not_available}
+        end
+
+      _ ->
+        :ok
+    end
+  end
 
   defp maybe_update(map, _key, nil), do: map
   defp maybe_update(map, key, value), do: Map.put(map, key, value)

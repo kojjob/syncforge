@@ -130,9 +130,22 @@ defmodule Syncforge.Rooms do
 
   """
   def create_room(attrs \\ %{}) do
-    %Room{}
-    |> Room.create_changeset(attrs)
-    |> Repo.insert()
+    org_id = attrs[:organization_id] || attrs["organization_id"]
+
+    with :ok <- check_room_limit(org_id) do
+      %Room{}
+      |> Room.create_changeset(attrs)
+      |> Repo.insert()
+    end
+  end
+
+  defp check_room_limit(nil), do: :ok
+
+  defp check_room_limit(org_id) do
+    case Syncforge.Repo.get(Syncforge.Accounts.Organization, org_id) do
+      nil -> :ok
+      org -> Syncforge.Billing.can_create_room?(org)
+    end
   end
 
   @doc """
