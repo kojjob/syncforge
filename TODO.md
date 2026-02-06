@@ -2,7 +2,7 @@
 
 > Real-Time Collaboration Infrastructure for Developers
 
-**Last Updated**: 2026-02-06
+**Last Updated**: 2026-02-06 (Phase 7 complete)
 
 ---
 
@@ -77,6 +77,7 @@
 - [x] Role-based access (Owner, Admin, Member, Viewer)
 - [x] Organization settings (plan_type, max_rooms, max_monthly_connections)
 - [x] API key management (create, list, revoke)
+- [x] RBAC enforcement in RoomChannel (org-aware join, viewer write restrictions)
 
 ---
 
@@ -111,14 +112,16 @@
 
 ---
 
-## Phase 6: Developer Experience
+## Phase 6: Developer Experience ✅
 
 ### Dashboard
-- [ ] Developer signup/login
-- [ ] API key management
-- [ ] Room monitoring
-- [ ] Usage analytics
-- [ ] Real-time logs
+- [x] Browser session auth (login/register LiveViews, session controller)
+- [x] Dashboard layout (sidebar nav, org picker)
+- [x] Overview page (stat cards)
+- [x] API key management UI (list/create/revoke, copy-to-clipboard)
+- [x] Room monitoring (org-scoped room list, create/delete, type badges)
+- [x] Usage analytics (connection_events table, Analytics context)
+- [x] Real-time logs (PubSub-streamed log viewer)
 
 ### Documentation
 - [ ] SDK installation guide
@@ -129,20 +132,35 @@
 
 ---
 
-## Phase 7: Billing & Plans
+## Phase 7: Billing & Plans ✅
 
 ### Stripe Integration
-- [ ] Stripe checkout integration
-- [ ] Subscription management
-- [ ] Usage metering (MAU, rooms)
-- [ ] Plan enforcement
-- [ ] Billing portal
+- [x] Stripe checkout integration (stripity_stripe ~> 3.2)
+- [x] Subscription management (create/update/cancel via webhooks)
+- [x] Usage metering (MAU via connection_events, room count)
+- [x] Plan enforcement (room limits, MAU limits, feature gating)
+- [x] Billing portal (Stripe Customer Portal sessions)
+- [x] Webhook handler (idempotent via BillingEvent schema)
+- [x] StripeClient behaviour + Mox mock for testing
 
 ### Pricing Tiers
-- [ ] Free tier (100 MAU, 5 rooms)
-- [ ] Starter ($49/mo - 1,000 MAU)
-- [ ] Pro ($199/mo - 10,000 MAU)
-- [ ] Business ($499/mo - 50,000 MAU)
+- [x] Free tier (50 MAU, 3 rooms — Presence, Cursors)
+- [x] Starter ($49/mo — 1,000 MAU, 10 rooms + Comments, Notifications)
+- [x] Pro ($199/mo — 10,000 MAU, 100 rooms + Voice, Webhooks)
+- [x] Business ($499/mo — 50,000 MAU, unlimited rooms + Analytics, SSO)
+- [x] Enterprise (custom — manual Stripe subscription)
+
+### Billing Dashboard
+- [x] BillingLive page (plan card, usage meters, feature checklist)
+- [x] Real-time updates via PubSub (billing:#{org_id} topic)
+- [x] Past-due/canceled status alerts
+- [x] Org switching with billing data reload
+- [x] Sidebar navigation link
+
+### Billing API
+- [x] POST /api/organizations/:org_id/billing/checkout
+- [x] POST /api/organizations/:org_id/billing/portal
+- [x] GET /api/organizations/:org_id/billing/subscription
 
 ---
 
@@ -158,7 +176,7 @@
 ### Security
 - [ ] Security audit
 - [ ] Rate limiting
-- [ ] Input validation
+- [ ] Input validation hardening
 - [ ] CORS configuration
 - [ ] API key rotation
 
@@ -204,9 +222,25 @@
 | 26 | Organizations & Multi-tenancy — Orgs, memberships, API keys, RBAC | PR #20 | ✅ |
 | 27 | RBAC Room Channel — Org-aware join, viewer write restrictions | PR #21 | ✅ |
 | 28 | JavaScript SDK — @syncforge/core + @syncforge/react | PR #22 | 324 tests |
+| 29 | Browser Session Auth — LiveView login/register, session controller | PR #24 | ✅ |
+| 30 | Dashboard Layout — Sidebar nav, org picker, overview stat cards | PR #25 | ✅ |
+| 31 | API Key Management UI — List/create/revoke with copy-to-clipboard | PR #26 | ✅ |
+| 32 | Room Monitoring — Org-scoped room list, create/delete, type badges | PR #27 | ✅ |
+| 33 | Usage Analytics & Logs — connection_events, Analytics context, PubSub logs | PR #28 | ✅ |
+| 34 | Session Auth Fix — Missing params handling, moduledoc corrections | PR #29 | ✅ |
+| 35 | Bcrypt Perf Fix — Skip password hashing during LiveView validate events | PR #30 | ✅ |
+| 36 | Phase 6 Merge — All dashboard features merged to main | PR #31 | ✅ |
+| 37 | Phase 7 Billing & Plans — Stripe integration, plan enforcement, billing dashboard | PR #32 | 87 tests |
+
+### Test Totals
+- **633 Elixir tests** (0 failures)
+- **212 @syncforge/core tests** (TypeScript)
+- **112 @syncforge/react tests** (TypeScript)
+- **Total: 957 tests**
 
 ### Up Next
-- Phase 6: Developer Experience (Dashboard, Documentation)
+- Phase 8: Production Readiness (load testing, security audit, deployment)
+- Phase 6 gap: Documentation (SDK guide, quick start, API reference)
 
 ---
 
@@ -214,7 +248,9 @@
 
 | Item | Priority | Notes |
 |------|----------|-------|
-| - | - | No debt yet (greenfield) |
+| Unused `socket` warnings | Low | 3 warnings in room_channel_test.exs (lines 333, 418, 683) |
+| Duplicated `pick_org/2` | Low | Same helper copy-pasted across 6 LiveViews — extract to shared module |
+| Comment popovers | Low | Inline comment popover UI component not yet built |
 
 ---
 
