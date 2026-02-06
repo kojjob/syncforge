@@ -53,7 +53,7 @@ defmodule SyncforgeWeb.Router do
       on_mount: [{SyncforgeWeb.Live.Hooks.RequireLiveAuth, :require_auth}],
       layout: {SyncforgeWeb.Layouts, :dashboard} do
       live "/dashboard", DashboardLive
-      live "/dashboard/rooms", DashboardLive, :rooms
+      live "/dashboard/rooms", RoomsLive
       live "/dashboard/api-keys", ApiKeysLive
       live "/dashboard/analytics", DashboardLive, :analytics
       live "/dashboard/logs", DashboardLive, :logs
