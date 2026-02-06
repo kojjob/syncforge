@@ -3,8 +3,8 @@ defmodule SyncforgeWeb.UserRegisterLive do
   LiveView for the registration page.
 
   Uses `Accounts.change_user_registration/2` for real-time validation
-  and POSTs to a phx-submit handler that registers the user and redirects
-  through the session controller to set the cookie.
+  and a phx-submit handler that registers the user and redirects to
+  the login page for sign-in.
   """
 
   use SyncforgeWeb, :live_view

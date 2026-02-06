@@ -43,6 +43,27 @@ defmodule SyncforgeWeb.UserSessionControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Invalid email or password"
     end
 
+    test "redirects to login when email param is missing", %{conn: conn} do
+      conn = post(conn, ~p"/session", %{"password" => "some_password"})
+
+      assert redirected_to(conn) == "/login"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Invalid email or password"
+    end
+
+    test "redirects to login when password param is missing", %{conn: conn} do
+      conn = post(conn, ~p"/session", %{"email" => "test@example.com"})
+
+      assert redirected_to(conn) == "/login"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Invalid email or password"
+    end
+
+    test "redirects to login when both params are missing", %{conn: conn} do
+      conn = post(conn, ~p"/session", %{})
+
+      assert redirected_to(conn) == "/login"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Invalid email or password"
+    end
+
     test "renews the session on login to prevent fixation", %{conn: conn, user: user} do
       conn =
         conn
