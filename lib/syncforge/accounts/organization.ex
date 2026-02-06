@@ -97,7 +97,7 @@ defmodule Syncforge.Accounts.Organization do
   defp slugify(string) do
     string
     |> String.downcase()
-    |> String.replace(~r/[^\w\s-]/, "")
+    |> String.replace(~r/[^a-z0-9\s-]/, "")
     |> String.replace(~r/[\s_]+/, "-")
     |> String.replace(~r/-+/, "-")
     |> String.trim("-")
