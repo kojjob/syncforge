@@ -54,7 +54,7 @@ defmodule SyncforgeWeb.Router do
       layout: {SyncforgeWeb.Layouts, :dashboard} do
       live "/dashboard", DashboardLive
       live "/dashboard/rooms", DashboardLive, :rooms
-      live "/dashboard/api-keys", DashboardLive, :api_keys
+      live "/dashboard/api-keys", ApiKeysLive
       live "/dashboard/analytics", DashboardLive, :analytics
       live "/dashboard/logs", DashboardLive, :logs
     end
