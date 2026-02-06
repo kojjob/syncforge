@@ -248,8 +248,8 @@ defmodule Syncforge.Rooms do
   def authorize_join(room_id, user, opts \\ []) do
     with {:ok, room} <- fetch_room(room_id),
          :ok <- check_capacity(room, opts),
-         :ok <- check_access(room, user) do
-      {:ok, room}
+         {:ok, role} <- check_access(room, user) do
+      {:ok, room, role}
     end
   end
 
@@ -272,15 +272,38 @@ defmodule Syncforge.Rooms do
     end
   end
 
-  defp check_access(room, _user) do
-    # For MVP: public rooms allow anyone, private rooms deny access
-    # Future: check organization membership, room-specific permissions
-    if room.is_public do
-      :ok
-    else
-      {:error, :unauthorized}
+  defp check_access(room, user) do
+    cond do
+      is_nil(room.organization_id) ->
+        if room.is_public, do: {:ok, nil}, else: {:error, :unauthorized}
+
+      room.is_public ->
+        {:ok, lookup_membership_role(room.organization_id, user)}
+
+      true ->
+        case lookup_membership_role(room.organization_id, user) do
+          nil -> {:error, :unauthorized}
+          role -> {:ok, role}
+        end
     end
   end
+
+  defp lookup_membership_role(_org_id, nil), do: nil
+
+  defp lookup_membership_role(org_id, user) when is_map(user) do
+    case Map.get(user, :id) || Map.get(user, "id") do
+      nil ->
+        nil
+
+      user_id ->
+        case Syncforge.Organizations.get_membership(org_id, user_id) do
+          %{status: "active", role: role} -> role
+          _ -> nil
+        end
+    end
+  end
+
+  defp lookup_membership_role(_org_id, _user), do: nil
 
   @doc """
   Returns the current state of a room for syncing to joining users.

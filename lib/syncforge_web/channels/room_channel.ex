@@ -53,9 +53,14 @@ defmodule SyncforgeWeb.RoomChannel do
   @impl true
   def join("room:" <> room_id, _params, socket) do
     case Syncforge.Rooms.authorize_join(room_id, socket.assigns.current_user) do
-      {:ok, room} ->
+      {:ok, room, role} ->
         send(self(), :after_join)
-        socket = assign(socket, :room_id, room.id)
+
+        socket =
+          socket
+          |> assign(:room_id, room.id)
+          |> assign(:membership_role, role)
+
         {:ok, %{presence: %{}}, socket}
 
       {:error, reason} ->
@@ -104,6 +109,8 @@ defmodule SyncforgeWeb.RoomChannel do
 
   @impl true
   def handle_in("cursor:update", %{"x" => x, "y" => y} = params, socket) do
+    if not can_write?(socket), do: throw(:forbidden)
+
     user = socket.assigns.current_user
     room_id = socket.assigns.room_id
 
@@ -133,6 +140,8 @@ defmodule SyncforgeWeb.RoomChannel do
     end
 
     {:noreply, socket}
+  catch
+    :forbidden -> {:reply, {:error, %{reason: :forbidden}}, socket}
   end
 
   @impl true
@@ -152,6 +161,8 @@ defmodule SyncforgeWeb.RoomChannel do
 
   @impl true
   def handle_in("selection:update", params, socket) do
+    if not can_write?(socket), do: throw(:forbidden)
+
     user = socket.assigns.current_user
 
     # Get user color for selection highlighting (same as cursor color)
@@ -168,10 +179,14 @@ defmodule SyncforgeWeb.RoomChannel do
     })
 
     {:noreply, socket}
+  catch
+    :forbidden -> {:reply, {:error, %{reason: :forbidden}}, socket}
   end
 
   @impl true
   def handle_in("typing:start", _params, socket) do
+    if not can_write?(socket), do: throw(:forbidden)
+
     user = socket.assigns.current_user
 
     broadcast_from!(socket, "typing:start", %{
@@ -179,10 +194,14 @@ defmodule SyncforgeWeb.RoomChannel do
     })
 
     {:noreply, socket}
+  catch
+    :forbidden -> {:reply, {:error, %{reason: :forbidden}}, socket}
   end
 
   @impl true
   def handle_in("typing:stop", _params, socket) do
+    if not can_write?(socket), do: throw(:forbidden)
+
     user = socket.assigns.current_user
 
     broadcast_from!(socket, "typing:stop", %{
@@ -190,12 +209,16 @@ defmodule SyncforgeWeb.RoomChannel do
     })
 
     {:noreply, socket}
+  catch
+    :forbidden -> {:reply, {:error, %{reason: :forbidden}}, socket}
   end
 
   # Comment events for real-time comment sync
 
   @impl true
   def handle_in("comment:create", params, socket) do
+    if not can_write?(socket), do: throw(:forbidden)
+
     user = socket.assigns.current_user
     room_id = socket.assigns.room_id
 
@@ -222,10 +245,14 @@ defmodule SyncforgeWeb.RoomChannel do
       {:error, changeset} ->
         {:reply, {:error, %{errors: format_changeset_errors(changeset)}}, socket}
     end
+  catch
+    :forbidden -> {:reply, {:error, %{reason: :forbidden}}, socket}
   end
 
   @impl true
   def handle_in("comment:update", %{"id" => comment_id} = params, socket) do
+    if not can_write?(socket), do: throw(:forbidden)
+
     user = socket.assigns.current_user
 
     case Syncforge.Comments.get_comment(comment_id) do
@@ -248,10 +275,14 @@ defmodule SyncforgeWeb.RoomChannel do
           end
         end
     end
+  catch
+    :forbidden -> {:reply, {:error, %{reason: :forbidden}}, socket}
   end
 
   @impl true
   def handle_in("comment:delete", %{"id" => comment_id}, socket) do
+    if not can_write?(socket), do: throw(:forbidden)
+
     user = socket.assigns.current_user
 
     case Syncforge.Comments.get_comment(comment_id) do
@@ -279,10 +310,14 @@ defmodule SyncforgeWeb.RoomChannel do
           end
         end
     end
+  catch
+    :forbidden -> {:reply, {:error, %{reason: :forbidden}}, socket}
   end
 
   @impl true
   def handle_in("comment:resolve", %{"id" => comment_id, "resolved" => resolved}, socket) do
+    if not can_write?(socket), do: throw(:forbidden)
+
     user = socket.assigns.current_user
 
     case Syncforge.Comments.get_comment(comment_id) do
@@ -319,12 +354,16 @@ defmodule SyncforgeWeb.RoomChannel do
           end
         end
     end
+  catch
+    :forbidden -> {:reply, {:error, %{reason: :forbidden}}, socket}
   end
 
   # Reaction events for emoji reactions on comments
 
   @impl true
   def handle_in("reaction:add", %{"comment_id" => comment_id, "emoji" => emoji}, socket) do
+    if not can_write?(socket), do: throw(:forbidden)
+
     user = socket.assigns.current_user
 
     attrs = %{
@@ -349,10 +388,14 @@ defmodule SyncforgeWeb.RoomChannel do
       {:error, changeset} ->
         {:reply, {:error, %{errors: format_changeset_errors(changeset)}}, socket}
     end
+  catch
+    :forbidden -> {:reply, {:error, %{reason: :forbidden}}, socket}
   end
 
   @impl true
   def handle_in("reaction:remove", %{"comment_id" => comment_id, "emoji" => emoji}, socket) do
+    if not can_write?(socket), do: throw(:forbidden)
+
     user = socket.assigns.current_user
 
     case Syncforge.Reactions.remove_reaction(comment_id, user.id, emoji) do
@@ -376,6 +419,8 @@ defmodule SyncforgeWeb.RoomChannel do
       {:error, :not_found} ->
         {:reply, {:error, %{reason: :not_found}}, socket}
     end
+  catch
+    :forbidden -> {:reply, {:error, %{reason: :forbidden}}, socket}
   end
 
   # Fallback for reaction:add with missing params
@@ -393,6 +438,8 @@ defmodule SyncforgeWeb.RoomChannel do
 
   @impl true
   def handle_in("reaction:toggle", %{"comment_id" => comment_id, "emoji" => emoji}, socket) do
+    if not can_write?(socket), do: throw(:forbidden)
+
     user = socket.assigns.current_user
 
     attrs = %{
@@ -419,6 +466,8 @@ defmodule SyncforgeWeb.RoomChannel do
       {:error, changeset} ->
         {:reply, {:error, %{errors: format_changeset_errors(changeset)}}, socket}
     end
+  catch
+    :forbidden -> {:reply, {:error, %{reason: :forbidden}}, socket}
   end
 
   # Activity feed events
@@ -454,6 +503,10 @@ defmodule SyncforgeWeb.RoomChannel do
   end
 
   # Private helpers
+
+  # Viewers can read (presence, activities) but cannot write (cursors, comments, reactions)
+  # nil role (no org or non-member of public room) is allowed to write for backward compat
+  defp can_write?(socket), do: socket.assigns.membership_role != "viewer"
 
   defp maybe_update(map, _key, nil), do: map
   defp maybe_update(map, key, value), do: Map.put(map, key, value)

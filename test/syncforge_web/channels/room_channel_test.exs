@@ -1323,6 +1323,327 @@ defmodule SyncforgeWeb.RoomChannelTest do
     end
   end
 
+  describe "join/3 RBAC with organization rooms" do
+    setup do
+      # Create real DB users for org membership lookup
+      owner = Syncforge.AccountsFixtures.user_fixture()
+      {org, _owner} = Syncforge.OrganizationsFixtures.organization_fixture(owner)
+
+      member_user =
+        Syncforge.AccountsFixtures.user_fixture(%{
+          email: "ch-member-#{System.unique_integer([:positive])}@example.com"
+        })
+
+      Syncforge.OrganizationsFixtures.membership_fixture(org, member_user, %{role: "member"})
+
+      viewer_user =
+        Syncforge.AccountsFixtures.user_fixture(%{
+          email: "ch-viewer-#{System.unique_integer([:positive])}@example.com"
+        })
+
+      Syncforge.OrganizationsFixtures.membership_fixture(org, viewer_user, %{role: "viewer"})
+
+      outsider =
+        Syncforge.AccountsFixtures.user_fixture(%{
+          email: "ch-outsider-#{System.unique_integer([:positive])}@example.com"
+        })
+
+      suspended =
+        Syncforge.AccountsFixtures.user_fixture(%{
+          email: "ch-suspended-#{System.unique_integer([:positive])}@example.com"
+        })
+
+      {:ok, sus_mem} = Syncforge.Organizations.add_member(org, suspended.id, "member")
+      sus_mem |> Ecto.Changeset.change(%{status: "suspended"}) |> Syncforge.Repo.update!()
+
+      %{
+        org: org,
+        owner: owner,
+        member_user: member_user,
+        viewer_user: viewer_user,
+        outsider: outsider,
+        suspended: suspended
+      }
+    end
+
+    test "owner can join private org room", %{org: org, owner: owner} do
+      {:ok, room} =
+        Syncforge.Rooms.create_room(%{
+          name: "Private Org Room",
+          is_public: false,
+          organization_id: org.id
+        })
+
+      user_map = %{id: owner.id, name: owner.name, avatar_url: nil}
+
+      {:ok, socket} =
+        connect(UserSocket, %{"token" => generate_test_token(user_map)}, connect_info: %{})
+
+      assert {:ok, _reply, socket} = subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+      assert socket.assigns.membership_role == "owner"
+    end
+
+    test "member can join private org room", %{org: org, member_user: member_user} do
+      {:ok, room} =
+        Syncforge.Rooms.create_room(%{
+          name: "Private Org Room 2",
+          is_public: false,
+          organization_id: org.id
+        })
+
+      user_map = %{id: member_user.id, name: member_user.name, avatar_url: nil}
+
+      {:ok, socket} =
+        connect(UserSocket, %{"token" => generate_test_token(user_map)}, connect_info: %{})
+
+      assert {:ok, _reply, socket} = subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+      assert socket.assigns.membership_role == "member"
+    end
+
+    test "viewer can join private org room with viewer role", %{
+      org: org,
+      viewer_user: viewer_user
+    } do
+      {:ok, room} =
+        Syncforge.Rooms.create_room(%{
+          name: "Private Org Room 3",
+          is_public: false,
+          organization_id: org.id
+        })
+
+      user_map = %{id: viewer_user.id, name: viewer_user.name, avatar_url: nil}
+
+      {:ok, socket} =
+        connect(UserSocket, %{"token" => generate_test_token(user_map)}, connect_info: %{})
+
+      assert {:ok, _reply, socket} = subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+      assert socket.assigns.membership_role == "viewer"
+    end
+
+    test "non-member is rejected from private org room", %{org: org, outsider: outsider} do
+      {:ok, room} =
+        Syncforge.Rooms.create_room(%{
+          name: "Private Org Room 4",
+          is_public: false,
+          organization_id: org.id
+        })
+
+      user_map = %{id: outsider.id, name: outsider.name, avatar_url: nil}
+
+      {:ok, socket} =
+        connect(UserSocket, %{"token" => generate_test_token(user_map)}, connect_info: %{})
+
+      assert {:error, %{reason: :unauthorized}} =
+               subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+    end
+
+    test "suspended member is rejected from private org room", %{org: org, suspended: suspended} do
+      {:ok, room} =
+        Syncforge.Rooms.create_room(%{
+          name: "Private Org Room 5",
+          is_public: false,
+          organization_id: org.id
+        })
+
+      user_map = %{id: suspended.id, name: suspended.name, avatar_url: nil}
+
+      {:ok, socket} =
+        connect(UserSocket, %{"token" => generate_test_token(user_map)}, connect_info: %{})
+
+      assert {:error, %{reason: :unauthorized}} =
+               subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+    end
+
+    test "any user can join public org room with nil role for non-member", %{
+      org: org,
+      outsider: outsider
+    } do
+      {:ok, room} =
+        Syncforge.Rooms.create_room(%{
+          name: "Public Org Room",
+          is_public: true,
+          organization_id: org.id
+        })
+
+      user_map = %{id: outsider.id, name: outsider.name, avatar_url: nil}
+
+      {:ok, socket} =
+        connect(UserSocket, %{"token" => generate_test_token(user_map)}, connect_info: %{})
+
+      assert {:ok, _reply, socket} = subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+      assert socket.assigns.membership_role == nil
+    end
+
+    test "member joining public org room gets member role", %{org: org, member_user: member_user} do
+      {:ok, room} =
+        Syncforge.Rooms.create_room(%{
+          name: "Public Org Room 2",
+          is_public: true,
+          organization_id: org.id
+        })
+
+      user_map = %{id: member_user.id, name: member_user.name, avatar_url: nil}
+
+      {:ok, socket} =
+        connect(UserSocket, %{"token" => generate_test_token(user_map)}, connect_info: %{})
+
+      assert {:ok, _reply, socket} = subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+      assert socket.assigns.membership_role == "member"
+    end
+  end
+
+  describe "event RBAC for viewer role" do
+    setup do
+      # Create org + viewer user
+      owner = Syncforge.AccountsFixtures.user_fixture()
+      {org, _owner} = Syncforge.OrganizationsFixtures.organization_fixture(owner)
+
+      viewer_user =
+        Syncforge.AccountsFixtures.user_fixture(%{
+          email: "viewer-ev-#{System.unique_integer([:positive])}@example.com"
+        })
+
+      Syncforge.OrganizationsFixtures.membership_fixture(org, viewer_user, %{role: "viewer"})
+
+      {:ok, room} =
+        Syncforge.Rooms.create_room(%{
+          name: "Viewer RBAC Room",
+          is_public: false,
+          organization_id: org.id
+        })
+
+      user_map = %{id: viewer_user.id, name: viewer_user.name, avatar_url: nil}
+
+      {:ok, socket} =
+        connect(UserSocket, %{"token" => generate_test_token(user_map)}, connect_info: %{})
+
+      {:ok, _reply, socket} = subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+
+      {:ok, socket: socket, room: room, viewer_user: viewer_user}
+    end
+
+    test "viewer cannot broadcast cursor updates", %{socket: socket} do
+      ref = push(socket, "cursor:update", %{"x" => 100, "y" => 200})
+      assert_reply ref, :error, %{reason: :forbidden}
+    end
+
+    test "viewer cannot broadcast selection updates", %{socket: socket} do
+      ref = push(socket, "selection:update", %{"selection" => "text", "element_id" => "el-1"})
+      assert_reply ref, :error, %{reason: :forbidden}
+    end
+
+    test "viewer cannot send typing start", %{socket: socket} do
+      ref = push(socket, "typing:start", %{})
+      assert_reply ref, :error, %{reason: :forbidden}
+    end
+
+    test "viewer cannot send typing stop", %{socket: socket} do
+      ref = push(socket, "typing:stop", %{})
+      assert_reply ref, :error, %{reason: :forbidden}
+    end
+
+    test "viewer cannot create comments", %{socket: socket} do
+      ref = push(socket, "comment:create", %{"body" => "test"})
+      assert_reply ref, :error, %{reason: :forbidden}
+    end
+
+    test "viewer cannot update comments", %{socket: socket} do
+      ref = push(socket, "comment:update", %{"id" => Ecto.UUID.generate(), "body" => "test"})
+      assert_reply ref, :error, %{reason: :forbidden}
+    end
+
+    test "viewer cannot delete comments", %{socket: socket} do
+      ref = push(socket, "comment:delete", %{"id" => Ecto.UUID.generate()})
+      assert_reply ref, :error, %{reason: :forbidden}
+    end
+
+    test "viewer cannot resolve comments", %{socket: socket} do
+      ref = push(socket, "comment:resolve", %{"id" => Ecto.UUID.generate(), "resolved" => true})
+      assert_reply ref, :error, %{reason: :forbidden}
+    end
+
+    test "viewer cannot add reactions", %{socket: socket} do
+      ref = push(socket, "reaction:add", %{"comment_id" => Ecto.UUID.generate(), "emoji" => "👍"})
+      assert_reply ref, :error, %{reason: :forbidden}
+    end
+
+    test "viewer cannot toggle reactions", %{socket: socket} do
+      ref =
+        push(socket, "reaction:toggle", %{"comment_id" => Ecto.UUID.generate(), "emoji" => "👍"})
+
+      assert_reply ref, :error, %{reason: :forbidden}
+    end
+
+    test "viewer cannot remove reactions", %{socket: socket} do
+      ref =
+        push(socket, "reaction:remove", %{
+          "comment_id" => Ecto.UUID.generate(),
+          "emoji" => "👍"
+        })
+
+      assert_reply ref, :error, %{reason: :forbidden}
+    end
+
+    test "viewer CAN list activities", %{socket: socket} do
+      ref = push(socket, "activity:list", %{})
+      assert_reply ref, :ok, %{activities: _activities}
+    end
+  end
+
+  describe "event RBAC for member role" do
+    setup do
+      # Create org + member user
+      owner = Syncforge.AccountsFixtures.user_fixture()
+      {org, _owner} = Syncforge.OrganizationsFixtures.organization_fixture(owner)
+
+      member_user =
+        Syncforge.AccountsFixtures.user_fixture(%{
+          email: "member-ev-#{System.unique_integer([:positive])}@example.com"
+        })
+
+      Syncforge.OrganizationsFixtures.membership_fixture(org, member_user, %{role: "member"})
+
+      {:ok, room} =
+        Syncforge.Rooms.create_room(%{
+          name: "Member RBAC Room",
+          is_public: false,
+          organization_id: org.id
+        })
+
+      user_map = %{id: member_user.id, name: member_user.name, avatar_url: nil}
+
+      {:ok, socket} =
+        connect(UserSocket, %{"token" => generate_test_token(user_map)}, connect_info: %{})
+
+      {:ok, _reply, socket} = subscribe_and_join(socket, RoomChannel, "room:#{room.id}")
+
+      {:ok, socket: socket, room: room, member_user: member_user}
+    end
+
+    test "member can broadcast cursor updates", %{socket: socket} do
+      ref = push(socket, "cursor:update", %{"x" => 100, "y" => 200})
+      # Should not return :error/:forbidden - either :noreply (no ref reply) or :ok
+      refute_reply ref, :error, %{reason: :forbidden}
+    end
+
+    test "member can create comments", %{socket: socket} do
+      ref = push(socket, "comment:create", %{"body" => "Member comment"})
+      assert_reply ref, :ok, %{comment: _comment}
+    end
+
+    test "member can add reactions", %{socket: socket, member_user: member_user, room: room} do
+      {:ok, comment} =
+        Syncforge.Comments.create_comment(%{
+          body: "Reaction target",
+          room_id: room.id,
+          user_id: member_user.id
+        })
+
+      ref = push(socket, "reaction:add", %{"comment_id" => comment.id, "emoji" => "👍"})
+      assert_reply ref, :ok, %{reaction: _reaction}
+    end
+  end
+
   # Helper to generate test tokens
   defp generate_test_token(user) do
     Phoenix.Token.sign(SyncforgeWeb.Endpoint, "user socket", user)
