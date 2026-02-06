@@ -30,6 +30,9 @@ defmodule SyncforgeWeb.Router do
 
     post "/register", AuthController, :register
     post "/login", AuthController, :login
+    post "/forgot-password", AuthController, :forgot_password
+    post "/reset-password", AuthController, :reset_password
+    post "/confirm-email", AuthController, :confirm_email
   end
 
   # Protected API endpoints (Bearer token required)
@@ -37,6 +40,7 @@ defmodule SyncforgeWeb.Router do
     pipe_through [:api, SyncforgeWeb.Plugs.RequireAuth]
 
     get "/me", AuthController, :me
+    post "/resend-confirmation", AuthController, :resend_confirmation
   end
 
   # Enable Swoosh mailbox preview in development

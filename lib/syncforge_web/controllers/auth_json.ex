@@ -12,6 +12,10 @@ defmodule SyncforgeWeb.AuthJSON do
     %{user: user_data(user)}
   end
 
+  def render("message.json", %{message: message}) do
+    %{message: message}
+  end
+
   def render("error.json", %{changeset: changeset}) do
     errors =
       Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
