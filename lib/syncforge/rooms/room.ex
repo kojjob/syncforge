@@ -54,9 +54,10 @@ defmodule Syncforge.Rooms.Room do
     field :config, :map, default: %{}
     field :metadata, :map, default: %{}
 
+    belongs_to :organization, Syncforge.Accounts.Organization
+
     # Future associations
     # belongs_to :creator, Syncforge.Accounts.User
-    # belongs_to :organization, Syncforge.Accounts.Organization
     # has_many :documents, Syncforge.Documents.Document
     # has_many :comments, Syncforge.Comments.Comment
 
@@ -81,7 +82,8 @@ defmodule Syncforge.Rooms.Room do
       :max_participants,
       :is_public,
       :config,
-      :metadata
+      :metadata,
+      :organization_id
     ])
     |> validate_required([:name])
     |> generate_slug_if_missing()
