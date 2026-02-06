@@ -137,17 +137,35 @@ defmodule Syncforge.Billing do
     period_start = parse_unix_timestamp(stripe_sub[:current_period_start])
     period_end = parse_unix_timestamp(stripe_sub[:current_period_end])
 
-    org
-    |> Organization.billing_changeset(%{
-      stripe_subscription_id: stripe_sub.id,
-      stripe_subscription_status: stripe_sub.status,
-      plan_type: plan_type,
-      max_rooms: max_rooms,
-      max_monthly_connections: max_mau,
-      current_period_start: period_start,
-      current_period_end: period_end
-    })
-    |> Repo.update()
+    result =
+      org
+      |> Organization.billing_changeset(%{
+        stripe_subscription_id: stripe_sub.id,
+        stripe_subscription_status: stripe_sub.status,
+        plan_type: plan_type,
+        max_rooms: max_rooms,
+        max_monthly_connections: max_mau,
+        current_period_start: period_start,
+        current_period_end: period_end
+      })
+      |> Repo.update()
+
+    case result do
+      {:ok, updated_org} ->
+        broadcast_billing_update(updated_org.id)
+        {:ok, updated_org}
+
+      error ->
+        error
+    end
+  end
+
+  defp broadcast_billing_update(org_id) do
+    Phoenix.PubSub.broadcast(
+      Syncforge.PubSub,
+      "billing:#{org_id}",
+      {:billing_updated, org_id}
+    )
   end
 
   # ── Webhook Event Processing ────────────────────────────
