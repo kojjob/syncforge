@@ -97,6 +97,15 @@ if config_env() == :prod do
         raise("environment variable STRIPE_PRICE_BUSINESS is missing")
   }
 
+  # CORS allowed origins from environment (comma-separated)
+  cors_origins =
+    case System.get_env("ALLOWED_ORIGINS") do
+      nil -> ["https://#{host}"]
+      origins -> String.split(origins, ",", trim: true) |> Enum.map(&String.trim/1)
+    end
+
+  config :syncforge, :cors_allowed_origins, cors_origins
+
   config :syncforge, SyncforgeWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
     http: [

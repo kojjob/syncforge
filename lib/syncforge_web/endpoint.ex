@@ -13,7 +13,11 @@ defmodule SyncforgeWeb.Endpoint do
 
   # Real-time collaboration socket
   socket "/socket", SyncforgeWeb.UserSocket,
-    websocket: true,
+    websocket: [
+      connect_info: [:peer_data],
+      max_frame_size: 65_536,
+      compress: true
+    ],
     longpoll: false
 
   socket "/live", Phoenix.LiveView.Socket,
@@ -47,11 +51,20 @@ defmodule SyncforgeWeb.Endpoint do
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
+    length: 1_000_000,
     json_decoder: Phoenix.json_library(),
     body_reader: {SyncforgeWeb.CacheBodyReader, :read_body, []}
 
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
+
+  plug Corsica,
+    origins: {SyncforgeWeb.CorsConfig, :allowed_origins, []},
+    allow_headers: ["authorization", "content-type", "accept", "x-requested-with", "x-api-key"],
+    allow_methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allow_credentials: true,
+    max_age: 86_400
+
   plug SyncforgeWeb.Router
 end

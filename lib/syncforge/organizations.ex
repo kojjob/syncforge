@@ -196,7 +196,7 @@ defmodule Syncforge.Organizations do
   end
 
   @doc """
-  Lists API keys for an organization. By default only active keys.
+  Lists API keys for an organization. By default active + rotating keys.
   Pass `include_revoked: true` to include revoked keys.
   """
   def list_api_keys(org_id, opts \\ []) do
@@ -207,7 +207,7 @@ defmodule Syncforge.Organizations do
       if Keyword.get(opts, :include_revoked, false) do
         query
       else
-        where(query, [k], k.status == "active")
+        where(query, [k], k.status in ["active", "rotating"])
       end
 
     Repo.all(query)
@@ -221,6 +221,67 @@ defmodule Syncforge.Organizations do
     ApiKey
     |> where([k], k.id == ^key_id and k.organization_id == ^org_id)
     |> Repo.one()
+  end
+
+  # --- API Key Rotation ---
+
+  @doc """
+  Rotates an API key: creates a new key with the same properties,
+  marks the old key as "rotating" with a 24h grace period.
+
+  Returns `{:ok, new_api_key, raw_key}` or `{:error, reason}`.
+  """
+  def rotate_api_key(org, %ApiKey{} = api_key) do
+    rotate_api_key(org, api_key.id)
+  end
+
+  def rotate_api_key(org, old_key_id) when is_binary(old_key_id) do
+    case get_api_key_for_org(org.id, old_key_id) do
+      nil ->
+        {:error, :key_not_found}
+
+      %{status: status} when status != "active" ->
+        {:error, :key_not_active}
+
+      old_key ->
+        Ecto.Multi.new()
+        |> Ecto.Multi.run(:new_key, fn _repo, _changes ->
+          case create_api_key(org, %{
+                 label: old_key.label,
+                 type: old_key.type,
+                 scopes: old_key.scopes,
+                 rate_limit: old_key.rate_limit,
+                 allowed_origins: old_key.allowed_origins
+               }) do
+            {:ok, api_key, raw_key} -> {:ok, {api_key, raw_key}}
+            {:error, changeset} -> {:error, changeset}
+          end
+        end)
+        |> Ecto.Multi.update(:rotate_old, fn %{new_key: {new_key, _raw}} ->
+          ApiKey.rotation_changeset(old_key, new_key.id)
+        end)
+        |> Repo.transaction()
+        |> case do
+          {:ok, %{new_key: {new_key, raw_key}, rotate_old: rotated_old}} ->
+            {:ok, new_key, raw_key, rotated_old}
+
+          {:error, _step, reason, _changes} ->
+            {:error, reason}
+        end
+    end
+  end
+
+  @doc """
+  Revokes rotating keys whose grace period (24h) has expired.
+  Called lazily or via a periodic job.
+  """
+  def expire_rotating_keys(grace_hours \\ 24) do
+    cutoff = DateTime.utc_now() |> DateTime.add(-grace_hours * 3600, :second)
+
+    from(k in ApiKey,
+      where: k.status == "rotating" and k.rotated_at < ^cutoff
+    )
+    |> Repo.update_all(set: [status: "revoked"])
   end
 
   # --- Dashboard Helpers ---

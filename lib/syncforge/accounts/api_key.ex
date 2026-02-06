@@ -17,7 +17,7 @@ defmodule Syncforge.Accounts.ApiKey do
   @foreign_key_type :binary_id
 
   @valid_types ~w(publishable secret)
-  @valid_statuses ~w(active revoked)
+  @valid_statuses ~w(active rotating revoked)
 
   schema "api_keys" do
     field :label, :string
@@ -30,6 +30,8 @@ defmodule Syncforge.Accounts.ApiKey do
     field :expires_at, :utc_datetime_usec
     field :allowed_origins, {:array, :string}, default: []
     field :created_by_id, :binary_id
+    field :rotated_at, :utc_datetime_usec
+    field :replaced_by_id, :binary_id
 
     belongs_to :organization, Organization
 
@@ -87,5 +89,16 @@ defmodule Syncforge.Accounts.ApiKey do
     api_key
     |> change()
     |> put_change(:status, "revoked")
+  end
+
+  @doc """
+  Builds a changeset for marking a key as rotating (replaced by a new key).
+  """
+  def rotation_changeset(api_key, replaced_by_id) do
+    api_key
+    |> change()
+    |> put_change(:status, "rotating")
+    |> put_change(:rotated_at, DateTime.utc_now() |> DateTime.truncate(:microsecond))
+    |> put_change(:replaced_by_id, replaced_by_id)
   end
 end

@@ -59,3 +59,6 @@ config :phoenix,
 
 # Disable slow query logging noise in tests
 config :syncforge, :slow_query_threshold_ms, 5_000
+
+# CORS: Allow all origins in tests
+config :syncforge, :cors_allowed_origins, :all
