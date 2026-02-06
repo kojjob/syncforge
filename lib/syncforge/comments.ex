@@ -42,25 +42,45 @@ defmodule Syncforge.Comments do
 
   - `:include_replies` - Include threaded replies (default: true)
   - `:include_resolved` - Include resolved comments (default: true)
+  - `:limit` - Maximum number of comments to return (default: no limit)
+  - `:offset` - Number of comments to skip (default: 0)
 
   ## Examples
 
       iex> list_comments(room_id)
       [%Comment{}, ...]
 
+      iex> list_comments(room_id, limit: 10, offset: 20)
+      [%Comment{}, ...]
+
   """
   def list_comments(room_id, opts \\ []) do
     include_resolved = Keyword.get(opts, :include_resolved, true)
+    limit = Keyword.get(opts, :limit)
+    offset = Keyword.get(opts, :offset, 0)
 
     Comment
     |> where([c], c.room_id == ^room_id)
     |> maybe_exclude_resolved(include_resolved)
-    |> order_by([c], asc: c.inserted_at)
+    |> order_by([c], asc: c.inserted_at, asc: c.id)
+    |> maybe_offset(offset)
+    |> maybe_limit(limit)
     |> Repo.all()
   end
 
   defp maybe_exclude_resolved(query, true), do: query
   defp maybe_exclude_resolved(query, false), do: where(query, [c], is_nil(c.resolved_at))
+
+  defp maybe_limit(query, nil), do: query
+  defp maybe_limit(query, limit) when is_integer(limit) and limit > 0, do: limit(query, ^limit)
+  defp maybe_limit(query, _limit), do: query
+
+  defp maybe_offset(query, 0), do: query
+
+  defp maybe_offset(query, offset) when is_integer(offset) and offset > 0,
+    do: offset(query, ^offset)
+
+  defp maybe_offset(query, _offset), do: query
 
   @doc """
   Returns top-level comments (no parent) for a room.
