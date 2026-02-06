@@ -7,6 +7,8 @@ defmodule Syncforge.Application do
 
   @impl true
   def start(_type, _args) do
+    Logger.add_handlers(:sentry)
+
     children = [
       SyncforgeWeb.Telemetry,
       Syncforge.Repo,

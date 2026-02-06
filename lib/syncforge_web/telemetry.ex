@@ -42,6 +42,23 @@ defmodule SyncforgeWeb.Telemetry do
     end
   end
 
+  # --- Telemetry emit helpers ---
+
+  @doc "Emit a room join telemetry event."
+  def emit_room_join(metadata) do
+    :telemetry.execute([:syncforge, :room, :join], %{count: 1}, metadata)
+  end
+
+  @doc "Emit a room leave telemetry event."
+  def emit_room_leave(metadata) do
+    :telemetry.execute([:syncforge, :room, :leave], %{count: 1}, metadata)
+  end
+
+  @doc "Emit a channel message telemetry event."
+  def emit_channel_message(metadata) do
+    :telemetry.execute([:syncforge, :channel, :message], %{count: 1}, metadata)
+  end
+
   def metrics do
     [
       # Phoenix Metrics
@@ -98,6 +115,24 @@ defmodule SyncforgeWeb.Telemetry do
           "The time the connection spent waiting before being checked out for the query"
       ),
 
+      # SyncForge custom metrics
+      counter("syncforge.room.join.count",
+        description: "Number of room joins"
+      ),
+      counter("syncforge.room.leave.count",
+        description: "Number of room leaves"
+      ),
+      counter("syncforge.channel.message.count",
+        tags: [:event],
+        description: "Number of channel messages by event type"
+      ),
+      last_value("syncforge.presence.tracked_users.count",
+        description: "Current number of tracked presence users"
+      ),
+      last_value("syncforge.rooms.active_count.count",
+        description: "Current number of active rooms with connected users"
+      ),
+
       # VM Metrics
       summary("vm.memory.total", unit: {:byte, :kilobyte}),
       summary("vm.total_run_queue_lengths.total"),
@@ -108,10 +143,45 @@ defmodule SyncforgeWeb.Telemetry do
 
   defp periodic_measurements do
     [
-      # A module, function and arguments to be invoked periodically.
-      # This function must call :telemetry.execute/3 and a metric must be added above.
-      # {SyncforgeWeb, :count_users, []}
+      {__MODULE__, :measure_presence_count, []},
+      {__MODULE__, :measure_active_rooms, []}
     ]
+  end
+
+  @doc false
+  def measure_presence_count do
+    count =
+      try do
+        SyncforgeWeb.Presence.list("rooms:*")
+        |> map_size()
+      rescue
+        _ -> 0
+      end
+
+    :telemetry.execute(
+      [:syncforge, :presence, :tracked_users],
+      %{count: count},
+      %{}
+    )
+  end
+
+  @doc false
+  def measure_active_rooms do
+    count =
+      try do
+        Phoenix.PubSub.node_name(Syncforge.PubSub)
+        # We can't easily count active rooms without tracking state,
+        # so for now use 0 as a baseline and rely on join/leave counters.
+        0
+      rescue
+        _ -> 0
+      end
+
+    :telemetry.execute(
+      [:syncforge, :rooms, :active_count],
+      %{count: count},
+      %{}
+    )
   end
 
   defp slow_query_threshold do

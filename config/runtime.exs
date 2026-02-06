@@ -106,6 +106,11 @@ if config_env() == :prod do
 
   config :syncforge, :cors_allowed_origins, cors_origins
 
+  # Sentry error tracking (optional — only activated if SENTRY_DSN is set)
+  if sentry_dsn = System.get_env("SENTRY_DSN") do
+    config :sentry, dsn: sentry_dsn
+  end
+
   config :syncforge, SyncforgeWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
     http: [

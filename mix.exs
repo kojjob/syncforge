@@ -69,6 +69,8 @@ defmodule Syncforge.MixProject do
       {:stripity_stripe, "~> 3.2"},
       {:hammer, "~> 7.2"},
       {:corsica, "~> 2.1"},
+      {:logger_json, "~> 7.0"},
+      {:sentry, "~> 10.0"},
       {:mox, "~> 1.0", only: :test}
     ]
   end
