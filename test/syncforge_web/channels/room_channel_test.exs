@@ -1574,6 +1574,16 @@ defmodule SyncforgeWeb.RoomChannelTest do
       assert_reply ref, :error, %{reason: :forbidden}
     end
 
+    test "viewer cannot remove reactions", %{socket: socket} do
+      ref =
+        push(socket, "reaction:remove", %{
+          "comment_id" => Ecto.UUID.generate(),
+          "emoji" => "👍"
+        })
+
+      assert_reply ref, :error, %{reason: :forbidden}
+    end
+
     test "viewer CAN list activities", %{socket: socket} do
       ref = push(socket, "activity:list", %{})
       assert_reply ref, :ok, %{activities: _activities}
