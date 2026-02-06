@@ -54,13 +54,15 @@ defmodule SyncforgeWeb.RoomChannel do
   def join("room:" <> room_id, _params, socket) do
     with {:ok, room, role} <-
            Syncforge.Rooms.authorize_join(room_id, socket.assigns.current_user),
-         :ok <- check_connection_limit(room) do
+         org <- load_organization(room),
+         :ok <- check_connection_limit(org) do
       send(self(), :after_join)
 
       socket =
         socket
         |> assign(:room_id, room.id)
         |> assign(:membership_role, role)
+        |> assign(:organization, org)
 
       {:ok, %{presence: %{}}, socket}
     else
@@ -511,38 +513,27 @@ defmodule SyncforgeWeb.RoomChannel do
   # nil role (no org or non-member of public room) is allowed to write for backward compat
   defp can_write?(socket), do: socket.assigns.membership_role != "viewer"
 
-  # Check MAU limit for rooms belonging to an organization
-  defp check_connection_limit(%{organization_id: nil}), do: :ok
+  # Load the organization for a room (nil if room has no org)
+  defp load_organization(%{organization_id: nil}), do: nil
 
-  defp check_connection_limit(%{organization_id: org_id}) do
-    case Syncforge.Repo.get(Syncforge.Accounts.Organization, org_id) do
-      nil -> :ok
-      org -> Syncforge.Billing.can_connect?(org)
-    end
+  defp load_organization(%{organization_id: org_id}) do
+    Syncforge.Repo.get(Syncforge.Accounts.Organization, org_id)
   end
 
-  # Check feature availability for rooms belonging to an organization
+  # Check MAU limit — org is already loaded and cached in assigns
+  defp check_connection_limit(nil), do: :ok
+  defp check_connection_limit(org), do: Syncforge.Billing.can_connect?(org)
+
+  # Check feature availability — reads org from socket assigns (no DB query)
   defp check_feature(socket, feature) do
-    room_id = socket.assigns.room_id
-    room = Syncforge.Rooms.get_room(room_id)
-
-    case room do
-      %{organization_id: nil} ->
+    case socket.assigns.organization do
+      nil ->
         :ok
 
-      %{organization_id: org_id} ->
-        case Syncforge.Repo.get(Syncforge.Accounts.Organization, org_id) do
-          nil ->
-            :ok
-
-          org ->
-            if Syncforge.Billing.feature_enabled?(org, feature),
-              do: :ok,
-              else: {:error, :feature_not_available}
-        end
-
-      _ ->
-        :ok
+      org ->
+        if Syncforge.Billing.feature_enabled?(org, feature),
+          do: :ok,
+          else: {:error, :feature_not_available}
     end
   end
 

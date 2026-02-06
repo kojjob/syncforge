@@ -33,13 +33,30 @@ if config_env() == :prod do
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
-  config :syncforge, Syncforge.Repo,
-    # ssl: true,
+  ssl_enabled = System.get_env("DATABASE_SSL", "true") != "false"
+
+  repo_config = [
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-    # For machines with several cores, consider starting multiple pools of `pool_size`
-    # pool_count: 4,
+    queue_target: String.to_integer(System.get_env("DB_QUEUE_TARGET") || "50"),
+    queue_interval: String.to_integer(System.get_env("DB_QUEUE_INTERVAL") || "1000"),
     socket_options: maybe_ipv6
+  ]
+
+  repo_config =
+    if ssl_enabled do
+      Keyword.merge(repo_config, ssl: true, ssl_opts: [verify: :verify_none])
+    else
+      repo_config
+    end
+
+  repo_config =
+    case System.get_env("POOL_COUNT") do
+      nil -> repo_config
+      count -> Keyword.put(repo_config, :pool_count, String.to_integer(count))
+    end
+
+  config :syncforge, Syncforge.Repo, repo_config
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you

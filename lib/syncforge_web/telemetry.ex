@@ -2,12 +2,22 @@ defmodule SyncforgeWeb.Telemetry do
   use Supervisor
   import Telemetry.Metrics
 
+  require Logger
+
   def start_link(arg) do
     Supervisor.start_link(__MODULE__, arg, name: __MODULE__)
   end
 
   @impl true
   def init(_arg) do
+    # Attach slow query logger
+    :telemetry.attach(
+      "syncforge-slow-query-logger",
+      [:syncforge, :repo, :query],
+      &__MODULE__.handle_slow_query/4,
+      %{threshold_ms: slow_query_threshold()}
+    )
+
     children = [
       # Telemetry poller will execute the given period measurements
       # every 10_000ms. Learn more here: https://hexdocs.pm/telemetry_metrics
@@ -17,6 +27,19 @@ defmodule SyncforgeWeb.Telemetry do
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
+  end
+
+  @doc false
+  def handle_slow_query(_event_name, measurements, metadata, config) do
+    total_time_ms = System.convert_time_unit(measurements.total_time, :native, :millisecond)
+
+    if total_time_ms > config.threshold_ms do
+      Logger.warning(
+        "Slow query (#{total_time_ms}ms): #{metadata.query}",
+        query_time_ms: total_time_ms,
+        source: metadata.source
+      )
+    end
   end
 
   def metrics do
@@ -89,5 +112,12 @@ defmodule SyncforgeWeb.Telemetry do
       # This function must call :telemetry.execute/3 and a metric must be added above.
       # {SyncforgeWeb, :count_users, []}
     ]
+  end
+
+  defp slow_query_threshold do
+    case Application.get_env(:syncforge, :slow_query_threshold_ms) do
+      nil -> if Application.get_env(:syncforge, :env) == :prod, do: 200, else: 100
+      ms -> ms
+    end
   end
 end
