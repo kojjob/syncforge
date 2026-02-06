@@ -14,6 +14,10 @@ defmodule Syncforge.Accounts.User do
     field :role, :string, default: "member"
     field :last_sign_in_at, :utc_datetime_usec
     field :confirmed_at, :utc_datetime_usec
+    field :reset_password_token_hash, :string
+    field :reset_password_sent_at, :utc_datetime_usec
+    field :confirmation_token_hash, :string
+    field :confirmation_sent_at, :utc_datetime_usec
 
     timestamps(type: :utc_datetime_usec)
   end
@@ -37,6 +41,30 @@ defmodule Syncforge.Accounts.User do
     user
     |> cast(attrs, [:name, :avatar_url])
     |> validate_required([:name])
+  end
+
+  @doc """
+  A changeset for resetting a user's password.
+  Validates length and hashes the new password.
+  """
+  def password_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:password])
+    |> validate_required([:password])
+    |> validate_length(:password, min: 8)
+    |> hash_password()
+  end
+
+  @doc """
+  A changeset for confirming a user's email.
+  Sets confirmed_at if not already set.
+  """
+  def confirm_changeset(user) do
+    if user.confirmed_at do
+      change(user)
+    else
+      change(user, confirmed_at: DateTime.utc_now())
+    end
   end
 
   @doc """

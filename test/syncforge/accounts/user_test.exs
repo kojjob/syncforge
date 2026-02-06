@@ -87,6 +87,49 @@ defmodule Syncforge.Accounts.UserTest do
     end
   end
 
+  describe "password_changeset/2" do
+    test "with valid new password updates hash" do
+      hash = Bcrypt.hash_pwd_salt("old_password")
+      user = %User{password_hash: hash}
+      changeset = User.password_changeset(user, %{password: "new_password123"})
+      assert changeset.valid?
+      assert changeset.changes[:password_hash]
+      assert changeset.changes[:password_hash] != hash
+    end
+
+    test "rejects short password" do
+      user = %User{password_hash: Bcrypt.hash_pwd_salt("old_password")}
+      changeset = User.password_changeset(user, %{password: "short"})
+      refute changeset.valid?
+      assert %{password: [msg]} = errors_on(changeset)
+      assert msg =~ "at least"
+    end
+
+    test "requires password" do
+      user = %User{password_hash: Bcrypt.hash_pwd_salt("old_password")}
+      changeset = User.password_changeset(user, %{})
+      refute changeset.valid?
+      assert %{password: ["can't be blank"]} = errors_on(changeset)
+    end
+  end
+
+  describe "confirm_changeset/1" do
+    test "sets confirmed_at" do
+      user = %User{confirmed_at: nil}
+      changeset = User.confirm_changeset(user)
+      assert changeset.valid?
+      assert changeset.changes[:confirmed_at]
+    end
+
+    test "does not override existing confirmed_at" do
+      existing = ~U[2026-01-01 00:00:00.000000Z]
+      user = %User{confirmed_at: existing}
+      changeset = User.confirm_changeset(user)
+      # Should not have a change since already confirmed
+      refute Map.has_key?(changeset.changes, :confirmed_at)
+    end
+  end
+
   describe "valid_password?/2" do
     test "returns true for correct password" do
       hash = Bcrypt.hash_pwd_salt("correct_password")
