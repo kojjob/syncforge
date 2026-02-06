@@ -212,6 +212,16 @@ defmodule Syncforge.Organizations do
     Repo.all(query)
   end
 
+  @doc """
+  Gets an API key by ID, scoped to a specific organization.
+  Returns nil if not found or doesn't belong to the org.
+  """
+  def get_api_key_for_org(org_id, key_id) do
+    ApiKey
+    |> where([k], k.id == ^key_id and k.organization_id == ^org_id)
+    |> Repo.one()
+  end
+
   # --- Dashboard Helpers ---
 
   @doc """
