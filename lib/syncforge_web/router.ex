@@ -24,6 +24,37 @@ defmodule SyncforgeWeb.Router do
     get "/home", PageController, :home
   end
 
+  # Browser session management (POST to set cookie, DELETE to clear)
+  scope "/", SyncforgeWeb do
+    pipe_through :browser
+
+    post "/session", UserSessionController, :create
+    delete "/session", UserSessionController, :delete
+  end
+
+  # Unauthenticated LiveView pages (login/register)
+  # Redirects away if user is already logged in
+  scope "/", SyncforgeWeb do
+    pipe_through :browser
+
+    live_session :unauthenticated,
+      on_mount: [{SyncforgeWeb.Live.Hooks.RedirectIfAuthenticated, :redirect_if_authenticated}] do
+      live "/login", UserLoginLive
+      live "/register", UserRegisterLive
+    end
+  end
+
+  # Authenticated LiveView pages (dashboard)
+  # Requires user to be logged in via session cookie
+  scope "/", SyncforgeWeb do
+    pipe_through :browser
+
+    live_session :authenticated,
+      on_mount: [{SyncforgeWeb.Live.Hooks.RequireLiveAuth, :require_auth}] do
+      live "/dashboard", DashboardLive
+    end
+  end
+
   # Public auth endpoints (no authentication required)
   scope "/api", SyncforgeWeb do
     pipe_through :api

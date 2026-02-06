@@ -35,4 +35,23 @@ defmodule SyncforgeWeb.ConnCase do
     Syncforge.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
+
+  @doc """
+  Logs in a user by setting the session on the connection.
+
+  Use this in tests that need an authenticated browser session
+  (controller tests, LiveView tests).
+
+  ## Examples
+
+      setup %{conn: conn} do
+        user = Syncforge.AccountsFixtures.user_fixture()
+        %{conn: log_in_user(conn, user), user: user}
+      end
+  """
+  def log_in_user(conn, user) do
+    conn
+    |> Phoenix.ConnTest.init_test_session(%{})
+    |> Plug.Conn.put_session(:user_id, user.id)
+  end
 end
