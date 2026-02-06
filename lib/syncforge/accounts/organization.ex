@@ -10,10 +10,13 @@ defmodule Syncforge.Accounts.Organization do
 
   import Ecto.Changeset
 
+  alias Syncforge.Billing.Plan
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
   @valid_plan_types ~w(free starter pro business enterprise)
+  @valid_subscription_statuses Plan.valid_subscription_statuses()
 
   schema "organizations" do
     field :name, :string
@@ -23,6 +26,14 @@ defmodule Syncforge.Accounts.Organization do
     field :max_rooms, :integer, default: 3
     field :max_monthly_connections, :integer, default: 50
     field :settings, :map, default: %{}
+
+    # Billing fields
+    field :stripe_customer_id, :string
+    field :stripe_subscription_id, :string
+    field :stripe_subscription_status, :string, default: "none"
+    field :billing_email, :string
+    field :current_period_start, :utc_datetime_usec
+    field :current_period_end, :utc_datetime_usec
 
     timestamps(type: :utc_datetime_usec)
   end
@@ -76,6 +87,28 @@ defmodule Syncforge.Accounts.Organization do
     |> validate_number(:max_rooms, greater_than: 0)
     |> validate_number(:max_monthly_connections, greater_than: 0)
     |> unique_constraint(:slug)
+  end
+
+  @doc """
+  Builds a changeset for updating billing-related fields.
+  Used by the Billing context when syncing subscription state from Stripe.
+  """
+  def billing_changeset(organization, attrs) do
+    organization
+    |> cast(attrs, [
+      :stripe_customer_id,
+      :stripe_subscription_id,
+      :stripe_subscription_status,
+      :billing_email,
+      :current_period_start,
+      :current_period_end,
+      :plan_type,
+      :max_rooms,
+      :max_monthly_connections
+    ])
+    |> validate_inclusion(:stripe_subscription_status, @valid_subscription_statuses)
+    |> validate_inclusion(:plan_type, @valid_plan_types)
+    |> unique_constraint(:stripe_customer_id)
   end
 
   defp generate_slug_if_missing(changeset) do

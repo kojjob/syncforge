@@ -38,6 +38,17 @@ config :phoenix, :plug_init_mode, :runtime
 # Faster bcrypt hashing in tests
 config :bcrypt_elixir, log_rounds: 4
 
+# Stripe test configuration
+config :stripity_stripe, api_key: "sk_test_fake_key_for_tests"
+config :syncforge, :stripe_client, Syncforge.Billing.StripeClientMock
+config :syncforge, :stripe_webhook_secret, "whsec_test_secret"
+
+config :syncforge, :stripe_prices, %{
+  starter: "price_test_starter",
+  pro: "price_test_pro",
+  business: "price_test_business"
+}
+
 # Enable helpful, but potentially expensive runtime checks
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true

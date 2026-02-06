@@ -57,6 +57,29 @@ if config_env() == :prod do
 
   config :syncforge, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
+  # Stripe billing configuration (production)
+  config :stripity_stripe,
+    api_key:
+      System.get_env("STRIPE_SECRET_KEY") ||
+        raise("environment variable STRIPE_SECRET_KEY is missing")
+
+  config :syncforge,
+         :stripe_webhook_secret,
+         System.get_env("STRIPE_WEBHOOK_SECRET") ||
+           raise("environment variable STRIPE_WEBHOOK_SECRET is missing")
+
+  config :syncforge, :stripe_prices, %{
+    starter:
+      System.get_env("STRIPE_PRICE_STARTER") ||
+        raise("environment variable STRIPE_PRICE_STARTER is missing"),
+    pro:
+      System.get_env("STRIPE_PRICE_PRO") ||
+        raise("environment variable STRIPE_PRICE_PRO is missing"),
+    business:
+      System.get_env("STRIPE_PRICE_BUSINESS") ||
+        raise("environment variable STRIPE_PRICE_BUSINESS is missing")
+  }
+
   config :syncforge, SyncforgeWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
     http: [
