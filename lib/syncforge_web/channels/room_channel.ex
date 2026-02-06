@@ -52,7 +52,8 @@ defmodule SyncforgeWeb.RoomChannel do
 
   @impl true
   def join("room:" <> room_id, _params, socket) do
-    with {:ok, room, role} <- Syncforge.Rooms.authorize_join(room_id, socket.assigns.current_user),
+    with {:ok, room, role} <-
+           Syncforge.Rooms.authorize_join(room_id, socket.assigns.current_user),
          :ok <- check_connection_limit(room) do
       send(self(), :after_join)
 
