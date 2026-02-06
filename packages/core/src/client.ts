@@ -18,14 +18,10 @@ export class SyncForgeClient extends TypedEventEmitter<ClientEventMap> {
   private _socket: PhoenixSocket | null = null;
   private _state: ConnectionState = "disconnected";
   private _options: ClientOptions;
-  private _reconnectAttempt = 0;
 
   constructor(options: ClientOptions) {
     super();
-    this._options = {
-      reconnect: true,
-      ...options,
-    };
+    this._options = { ...options };
   }
 
   /** Current connection state */
@@ -81,8 +77,11 @@ export class SyncForgeClient extends TypedEventEmitter<ClientEventMap> {
   /** Disconnect from the server and clean up all channels. */
   disconnect(): void {
     if (this._socket) {
-      this._socket.disconnect();
+      // Null out before calling disconnect to prevent the onClose callback
+      // from emitting a second "disconnected" event.
+      const sock = this._socket;
       this._socket = null;
+      sock.disconnect();
     }
     this._setState("disconnected");
     this.emit("disconnected", { reason: "manual" });
@@ -92,9 +91,8 @@ export class SyncForgeClient extends TypedEventEmitter<ClientEventMap> {
   /**
    * Join a collaboration room.
    *
-   * Returns a Room instance that wraps a Phoenix Channel.
-   * The Room is lazy — it joins the channel but feature managers
-   * are initialized on demand.
+   * Returns a raw `{ channel, roomId }` tuple. Pass the channel to the
+   * `Room` constructor to get a managed Room instance with feature managers.
    */
   joinRoom(roomId: string, options?: JoinRoomOptions): JoinRoomResult {
     if (!this._socket) {
@@ -131,12 +129,14 @@ export class SyncForgeClient extends TypedEventEmitter<ClientEventMap> {
     if (!this._socket) return;
 
     this._socket.onOpen(() => {
-      this._reconnectAttempt = 0;
       this._setState("connected");
       this.emit("connected");
     });
 
     this._socket.onClose(() => {
+      // Guard: if _socket is already null, disconnect() was called manually
+      // and has already emitted "disconnected" — don't emit again.
+      if (!this._socket) return;
       this._setState("disconnected");
       this.emit("disconnected", { reason: "closed" });
     });

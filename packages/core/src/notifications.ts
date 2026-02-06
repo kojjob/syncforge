@@ -12,6 +12,7 @@ export class NotificationManager extends TypedEventEmitter<NotificationEventMap>
   private _channel: Channel;
   private _joined = false;
   private _unreadCount = 0;
+  private _listenerRefs: number[] = [];
 
   constructor(channel: Channel) {
     super();
@@ -54,6 +55,10 @@ export class NotificationManager extends TypedEventEmitter<NotificationEventMap>
 
   /** Leave the notification channel. */
   leave(): void {
+    for (const ref of this._listenerRefs) {
+      this._channel.off("", ref);
+    }
+    this._listenerRefs = [];
     this._channel.leave();
     this._joined = false;
     this._unreadCount = 0;
@@ -89,6 +94,7 @@ export class NotificationManager extends TypedEventEmitter<NotificationEventMap>
         .push("notification:mark_read", { id: notificationId })
         .receive("ok", (response: unknown) => {
           const resp = response as { notification: Notification };
+          if (this._unreadCount > 0) this._unreadCount--;
           resolve(resp.notification);
         })
         .receive("error", (resp: unknown) => reject(resp));
@@ -110,16 +116,20 @@ export class NotificationManager extends TypedEventEmitter<NotificationEventMap>
   }
 
   private _setupListeners(): void {
-    this._channel.on("notification:new", (payload: unknown) => {
-      const notification = payload as Notification;
-      this._unreadCount++;
-      this.emit("notification:new", notification);
-    });
+    this._listenerRefs.push(
+      this._channel.on("notification:new", (payload: unknown) => {
+        const notification = payload as Notification;
+        this._unreadCount++;
+        this.emit("notification:new", notification);
+      })
+    );
 
-    this._channel.on("notification:unread_count", (payload: unknown) => {
-      const data = payload as { count: number };
-      this._unreadCount = data.count;
-      this.emit("notification:unread_count", data);
-    });
+    this._listenerRefs.push(
+      this._channel.on("notification:unread_count", (payload: unknown) => {
+        const data = payload as { count: number };
+        this._unreadCount = data.count;
+        this.emit("notification:unread_count", data);
+      })
+    );
   }
 }

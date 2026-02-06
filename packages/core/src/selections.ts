@@ -14,6 +14,7 @@ type SelectionEvents = Pick<RoomEventMap, "selection:update">;
 export class SelectionManager extends TypedEventEmitter<SelectionEvents> {
   private _channel: Channel;
   private _selections = new Map<string, Selection>();
+  private _listenerRef: number = 0;
 
   constructor(channel: Channel) {
     super();
@@ -49,14 +50,15 @@ export class SelectionManager extends TypedEventEmitter<SelectionEvents> {
     this._selections.delete(userId);
   }
 
-  /** Clean up state. */
+  /** Clean up state and channel listeners. */
   destroy(): void {
+    this._channel.off("selection:update", this._listenerRef);
     this._selections.clear();
     this.removeAllListeners();
   }
 
   private _setupListener(): void {
-    this._channel.on("selection:update", (payload: unknown) => {
+    this._listenerRef = this._channel.on("selection:update", (payload: unknown) => {
       const sel = payload as Selection;
       if (sel.selection === null) {
         this._selections.delete(sel.user_id);

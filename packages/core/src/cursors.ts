@@ -18,9 +18,11 @@ const THROTTLE_MS = 16; // ~60fps
 export class CursorManager extends TypedEventEmitter<CursorEvents> {
   private _channel: Channel;
   private _cursors = new Map<string, CursorPosition>();
+  private _lerpPositions = new Map<string, { x: number; y: number }>();
   private _lastSendTime = 0;
   private _pendingUpdate: CursorPosition | null = null;
   private _throttleTimer: ReturnType<typeof setTimeout> | null = null;
+  private _listenerRef: number = 0;
 
   constructor(channel: Channel) {
     super();
@@ -70,6 +72,7 @@ export class CursorManager extends TypedEventEmitter<CursorEvents> {
    */
   removeCursor(userId: string): void {
     this._cursors.delete(userId);
+    this._lerpPositions.delete(userId);
   }
 
   /**
@@ -88,16 +91,12 @@ export class CursorManager extends TypedEventEmitter<CursorEvents> {
     const current = this._cursors.get(userId);
     if (!current) return null;
 
-    // If there's a stored lerp position, interpolate from it
-    const key = `_lerp_${userId}`;
-    const stored = (this as unknown as Record<string, { x: number; y: number }>)[key];
+    const stored = this._lerpPositions.get(userId);
 
     if (!stored) {
-      (this as unknown as Record<string, { x: number; y: number }>)[key] = {
-        x: current.x,
-        y: current.y,
-      };
-      return { x: current.x, y: current.y };
+      const pos = { x: current.x, y: current.y };
+      this._lerpPositions.set(userId, pos);
+      return pos;
     }
 
     stored.x += (current.x - stored.x) * factor;
@@ -106,19 +105,21 @@ export class CursorManager extends TypedEventEmitter<CursorEvents> {
     return { x: stored.x, y: stored.y };
   }
 
-  /** Clean up timers and state. */
+  /** Clean up timers, state, and channel listeners. */
   destroy(): void {
     if (this._throttleTimer) {
       clearTimeout(this._throttleTimer);
       this._throttleTimer = null;
     }
+    this._channel.off("cursor:update", this._listenerRef);
     this._cursors.clear();
+    this._lerpPositions.clear();
     this._pendingUpdate = null;
     this.removeAllListeners();
   }
 
   private _setupListener(): void {
-    this._channel.on("cursor:update", (payload: unknown) => {
+    this._listenerRef = this._channel.on("cursor:update", (payload: unknown) => {
       const cursor = payload as CursorPosition;
       this._cursors.set(cursor.user_id, cursor);
       this.emit("cursor:update", cursor);

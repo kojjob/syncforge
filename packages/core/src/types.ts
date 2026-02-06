@@ -111,7 +111,7 @@ export interface TypingEvent {
 // ---------------------------------------------------------------------------
 
 export interface RoomState {
-  comments: Comment[];
+  comments?: Comment[];
   metadata?: Record<string, unknown>;
 }
 
@@ -132,8 +132,6 @@ export interface ClientOptions {
   token: string;
   /** Additional params sent on socket connect */
   params?: Record<string, unknown>;
-  /** Auto-reconnect on disconnect (default: true) */
-  reconnect?: boolean;
   /** Logger function for debug output */
   logger?: (kind: string, msg: string, data?: unknown) => void;
 }
@@ -151,7 +149,6 @@ export interface ClientEventMap {
   connected: undefined;
   disconnected: { reason?: string };
   error: { message: string };
-  reconnecting: { attempt: number };
 }
 
 export interface RoomEventMap {

@@ -15,6 +15,8 @@ export class Room extends TypedEventEmitter<RoomEventMap> {
   private _joined = false;
   private _comments: Comment[] = [];
 
+  private _listenerRefs: number[] = [];
+
   constructor(channel: Channel, roomId: string) {
     super();
     this._channel = channel;
@@ -68,6 +70,10 @@ export class Room extends TypedEventEmitter<RoomEventMap> {
 
   /** Leave the room channel and clean up. */
   leave(): void {
+    for (const ref of this._listenerRefs) {
+      this._channel.off("", ref);
+    }
+    this._listenerRefs = [];
     this._channel.leave();
     this._joined = false;
     this._comments = [];
@@ -103,21 +109,25 @@ export class Room extends TypedEventEmitter<RoomEventMap> {
     this._channel.push("typing:stop", {});
   }
 
+  private _on(event: string, callback: (payload: unknown) => void): void {
+    this._listenerRefs.push(this._channel.on(event, callback));
+  }
+
   private _setupListeners(): void {
     // Room state hydration on join
-    this._channel.on("room_state", (payload: unknown) => {
+    this._on("room_state", (payload) => {
       const state = payload as RoomState;
       this._comments = state.comments ?? [];
       this.emit("room:state", state);
     });
 
     // Cursor updates from other users
-    this._channel.on("cursor:update", (payload: unknown) => {
+    this._on("cursor:update", (payload) => {
       this.emit("cursor:update", payload as RoomEventMap["cursor:update"]);
     });
 
     // Selection updates
-    this._channel.on("selection:update", (payload: unknown) => {
+    this._on("selection:update", (payload) => {
       this.emit(
         "selection:update",
         payload as RoomEventMap["selection:update"]
@@ -125,33 +135,33 @@ export class Room extends TypedEventEmitter<RoomEventMap> {
     });
 
     // Typing indicators
-    this._channel.on("typing:start", (payload: unknown) => {
+    this._on("typing:start", (payload) => {
       this.emit("typing:start", payload as RoomEventMap["typing:start"]);
     });
-    this._channel.on("typing:stop", (payload: unknown) => {
+    this._on("typing:stop", (payload) => {
       this.emit("typing:stop", payload as RoomEventMap["typing:stop"]);
     });
 
     // Comment events
-    this._channel.on("comment:created", (payload: unknown) => {
+    this._on("comment:created", (payload) => {
       const data = payload as RoomEventMap["comment:created"];
       this._comments.push(data.comment);
       this.emit("comment:created", data);
     });
-    this._channel.on("comment:updated", (payload: unknown) => {
+    this._on("comment:updated", (payload) => {
       const data = payload as RoomEventMap["comment:updated"];
       const idx = this._comments.findIndex((c) => c.id === data.comment.id);
       if (idx !== -1) this._comments[idx] = data.comment;
       this.emit("comment:updated", data);
     });
-    this._channel.on("comment:deleted", (payload: unknown) => {
+    this._on("comment:deleted", (payload) => {
       const data = payload as RoomEventMap["comment:deleted"];
       this._comments = this._comments.filter(
         (c) => c.id !== data.comment_id
       );
       this.emit("comment:deleted", data);
     });
-    this._channel.on("comment:resolved", (payload: unknown) => {
+    this._on("comment:resolved", (payload) => {
       const data = payload as RoomEventMap["comment:resolved"];
       const idx = this._comments.findIndex((c) => c.id === data.comment.id);
       if (idx !== -1) this._comments[idx] = data.comment;
@@ -159,10 +169,10 @@ export class Room extends TypedEventEmitter<RoomEventMap> {
     });
 
     // Reaction events
-    this._channel.on("reaction:added", (payload: unknown) => {
+    this._on("reaction:added", (payload) => {
       this.emit("reaction:added", payload as RoomEventMap["reaction:added"]);
     });
-    this._channel.on("reaction:removed", (payload: unknown) => {
+    this._on("reaction:removed", (payload) => {
       this.emit(
         "reaction:removed",
         payload as RoomEventMap["reaction:removed"]
@@ -170,7 +180,7 @@ export class Room extends TypedEventEmitter<RoomEventMap> {
     });
 
     // Activity events
-    this._channel.on("activity:created", (payload: unknown) => {
+    this._on("activity:created", (payload) => {
       this.emit(
         "activity:created",
         payload as RoomEventMap["activity:created"]
