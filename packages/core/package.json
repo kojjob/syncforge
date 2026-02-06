@@ -1,0 +1,41 @@
+{
+  "name": "@syncforge/core",
+  "version": "0.1.0",
+  "description": "Framework-agnostic real-time collaboration SDK for SyncForge",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "phoenix": ">=1.7.0"
+  },
+  "devDependencies": {
+    "phoenix": "^1.7.14",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "keywords": ["syncforge", "real-time", "collaboration", "phoenix", "channels", "presence"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kojjob/syncforge.git",
+    "directory": "packages/core"
+  }
+}

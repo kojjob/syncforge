@@ -57,25 +57,26 @@
 - [x] Real-time notification delivery
 - [x] Notification preferences
 - [x] Read/unread status
-- [ ] Activity feed
+- [x] Activity feed
 
 ---
 
 ## Phase 4: Authentication & Accounts
 
 ### User Management
-- [ ] User schema
-- [ ] Email/password authentication
-- [ ] Password reset flow
-- [ ] Email verification
-- [ ] API key generation
+- [x] User schema
+- [x] Email/password authentication
+- [x] Password reset flow
+- [x] Email verification
+- [x] API key generation
 
 ### Organizations
-- [ ] Organization schema
-- [ ] Multi-tenant support
-- [ ] Team member invitations
-- [ ] Role-based access (Owner, Admin, Editor, Viewer)
-- [ ] Organization settings
+- [x] Organization schema
+- [x] Multi-tenant support
+- [x] Team member management (add/remove/update role)
+- [x] Role-based access (Owner, Admin, Member, Viewer)
+- [x] Organization settings (plan_type, max_rooms, max_monthly_connections)
+- [x] API key management (create, list, revoke)
 
 ---
 
@@ -188,8 +189,16 @@
 18. **Real-time Notification Delivery** - NotificationChannel for instant notifications via Phoenix Channels with mark_read, mark_all_read, and list handlers
 19. **Notification Preferences** - Per-user preference settings for each notification type with get_or_create, should_notify?, and preference-aware creation
 
+20. **Activity Feed** - Room-level activity stream for collaboration event history (create, join, leave, comment, resolve, etc.)
+21. **User Authentication** - User schema with email/password auth, bcrypt hashing, Phoenix.Token sessions, RequireAuth plug, register/login/me API endpoints
+22. **Security Fix** - Room join authorization checks, comment ownership validation for mutations
+23. **Password Reset & Email Verification** - Token-based password reset (1h expiry), email confirmation (7d expiry), SHA-256 hashed tokens in DB, Swoosh email templates
+24. **Pagination & Rescue Fix** - Added pagination to list_comments, narrowed rescue clauses
+25. **Composite Indexes** - Added composite database indexes for common query patterns
+26. **Organizations & Multi-tenancy** - Organization schema with slug auto-gen, Membership with role-based access (owner/admin/member/viewer), API keys with hash-based security (sf_pub_/sf_sec_ prefix), room org-scoping (nullable), REST API with nested routes and authorization
+
 ### Up Next
-- Activity feed (room-level activity stream)
+- Phase 5: JavaScript SDK
 
 ---
 
