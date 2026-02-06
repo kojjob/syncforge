@@ -228,6 +228,56 @@ defmodule Syncforge.Billing do
 
   defp handle_webhook_event(_event_type, _event), do: :ok
 
+  # ── Plan Enforcement ────────────────────────────────────
+
+  @doc """
+  Checks whether the organization can create another room.
+  Returns `:ok` or `{:error, :room_limit_reached}`.
+  """
+  def can_create_room?(%Organization{} = org) do
+    current_count = Syncforge.Rooms.count_rooms_for_organization(org.id)
+
+    if current_count < org.max_rooms do
+      :ok
+    else
+      {:error, :room_limit_reached}
+    end
+  end
+
+  @doc """
+  Checks whether the organization can accept another connection (MAU check).
+  Uses connection_events to count distinct users in the current billing period.
+  Returns `:ok` or `{:error, :connection_limit_reached}`.
+  """
+  def can_connect?(%Organization{} = org) do
+    since = billing_period_start(org)
+    current_mau = Syncforge.Analytics.unique_users(org.id, since)
+
+    if current_mau < org.max_monthly_connections do
+      :ok
+    else
+      {:error, :connection_limit_reached}
+    end
+  end
+
+  @doc """
+  Checks whether a feature is enabled for the organization's plan.
+  Returns `true` or `false`.
+
+  Organizations that have never configured billing (stripe_subscription_status
+  is "none" or nil) get all features — enforcement only kicks in after a plan
+  is explicitly set through the billing flow.
+  """
+  def feature_enabled?(%Organization{stripe_subscription_status: status}, _feature)
+      when status in [nil, "none"] do
+    true
+  end
+
+  def feature_enabled?(%Organization{plan_type: plan_type}, feature) do
+    plan = plan_type || "free"
+    Plan.has_feature?(plan, feature)
+  end
+
   # ── Query Helpers ───────────────────────────────────────
 
   @doc "Returns true if the org has an active or trialing subscription."
@@ -279,4 +329,12 @@ defmodule Syncforge.Billing do
 
   defp stringify_keys(list) when is_list(list), do: Enum.map(list, &stringify_keys/1)
   defp stringify_keys(other), do: other
+
+  defp billing_period_start(%Organization{current_period_start: nil}) do
+    DateTime.add(DateTime.utc_now(), -30, :day)
+  end
+
+  defp billing_period_start(%Organization{current_period_start: start}) do
+    start
+  end
 end

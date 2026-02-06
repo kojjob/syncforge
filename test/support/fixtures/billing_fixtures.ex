@@ -17,7 +17,8 @@ defmodule Syncforge.BillingFixtures do
       |> Syncforge.Accounts.Organization.billing_changeset(%{
         plan_type: plan_type,
         max_rooms: plan_max_rooms(plan_type),
-        max_monthly_connections: plan_max_mau(plan_type)
+        max_monthly_connections: plan_max_mau(plan_type),
+        stripe_subscription_status: "active"
       })
       |> Syncforge.Repo.update()
 
