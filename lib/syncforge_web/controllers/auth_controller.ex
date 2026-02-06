@@ -82,6 +82,12 @@ defmodule SyncforgeWeb.AuthController do
     end
   end
 
+  def reset_password(conn, _params) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{error: "Token and password are required"})
+  end
+
   def confirm_email(conn, %{"token" => token}) do
     case Accounts.confirm_email(token) do
       {:ok, user} ->
@@ -94,6 +100,12 @@ defmodule SyncforgeWeb.AuthController do
         |> put_status(:unauthorized)
         |> json(%{error: "Invalid or expired token"})
     end
+  end
+
+  def confirm_email(conn, _params) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{error: "Token is required"})
   end
 
   def resend_confirmation(conn, _params) do

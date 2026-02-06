@@ -23,6 +23,9 @@ config :syncforge, SyncforgeWeb.Endpoint,
 # In test we don't send emails
 config :syncforge, Syncforge.Mailer, adapter: Swoosh.Adapters.Test
 
+# Mark test environment for runtime checks
+config :syncforge, :env, :test
+
 # Disable swoosh api client as it is only required for production adapters
 config :swoosh, :api_client, false
 

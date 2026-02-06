@@ -91,7 +91,9 @@ defmodule Syncforge.Accounts do
   Always returns `:ok` to prevent email enumeration.
   """
   def request_password_reset(email) when is_binary(email) do
-    case get_user_by_email(email) do
+    normalized = email |> String.trim() |> String.downcase()
+
+    case get_user_by_email(normalized) do
       nil ->
         :ok
 
@@ -99,17 +101,21 @@ defmodule Syncforge.Accounts do
         token = generate_token()
         hash = hash_token(token)
 
-        user
-        |> Ecto.Changeset.change(%{
-          reset_password_token_hash: hash,
-          reset_password_sent_at: DateTime.utc_now()
-        })
-        |> Repo.update!()
+        case user
+             |> Ecto.Changeset.change(%{
+               reset_password_token_hash: hash,
+               reset_password_sent_at: DateTime.utc_now()
+             })
+             |> Repo.update() do
+          {:ok, _updated} ->
+            reset_url = "#{SyncforgeWeb.Endpoint.url()}/reset-password?token=#{token}"
+            email_struct = UserEmail.password_reset_email(user, reset_url)
+            Mailer.deliver(email_struct)
+            maybe_send_test_email(email_struct)
 
-        reset_url = "#{SyncforgeWeb.Endpoint.url()}/reset-password?token=#{token}"
-        email_struct = UserEmail.password_reset_email(user, reset_url)
-        Mailer.deliver(email_struct)
-        send(self(), {:email, email_struct})
+          {:error, _changeset} ->
+            :ok
+        end
 
         :ok
     end
@@ -159,20 +165,23 @@ defmodule Syncforge.Accounts do
       token = generate_token()
       hash = hash_token(token)
 
-      {:ok, updated} =
-        user
-        |> Ecto.Changeset.change(%{
-          confirmation_token_hash: hash,
-          confirmation_sent_at: DateTime.utc_now()
-        })
-        |> Repo.update()
+      case user
+           |> Ecto.Changeset.change(%{
+             confirmation_token_hash: hash,
+             confirmation_sent_at: DateTime.utc_now()
+           })
+           |> Repo.update() do
+        {:ok, updated} ->
+          confirm_url = "#{SyncforgeWeb.Endpoint.url()}/confirm-email?token=#{token}"
+          email_struct = UserEmail.confirmation_email(updated, confirm_url)
+          Mailer.deliver(email_struct)
+          maybe_send_test_email(email_struct)
 
-      confirm_url = "#{SyncforgeWeb.Endpoint.url()}/confirm-email?token=#{token}"
-      email_struct = UserEmail.confirmation_email(updated, confirm_url)
-      Mailer.deliver(email_struct)
-      send(self(), {:email, email_struct})
+          {:ok, updated}
 
-      {:ok, updated}
+        {:error, _changeset} ->
+          {:error, :update_failed}
+      end
     end
   end
 
@@ -226,5 +235,11 @@ defmodule Syncforge.Accounts do
 
   defp token_expired?(sent_at, max_age) do
     DateTime.diff(DateTime.utc_now(), sent_at, :second) > max_age
+  end
+
+  defp maybe_send_test_email(email_struct) do
+    if Application.get_env(:syncforge, :env) == :test do
+      send(self(), {:email, email_struct})
+    end
   end
 end
