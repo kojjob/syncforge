@@ -2,7 +2,7 @@
 
 > Real-Time Collaboration Infrastructure for Developers
 
-**Last Updated**: 2026-02-06 (Phase 8 complete)
+**Last Updated**: 2026-02-06 (Phase 9 started)
 
 ---
 
@@ -200,6 +200,24 @@
 
 ---
 
+## Phase 9: Marketing Surface 🚧
+
+### Landing & Conversion
+- [x] Promote landing page to `/` (LiveView)
+- [x] Extract landing CSS into `assets/css/landing.css`
+- [x] Add dark/light/system theme persistence with LiveView hook sync
+- [x] Add landing page SEO basics (title/description/OG tags)
+- [x] Improve landing accessibility (focus-visible, ARIA labels, tab roles, reduced motion)
+- [x] Replace `/signup` CTAs with `/register`
+- [x] Add waitlist persistence (`waitlist_signups` migration + context + schema)
+- [x] Add support routes for `/docs`, `/blog`, `/privacy`, `/contact`
+- [ ] Replace placeholder marketing pages with launch-ready content
+- [ ] Add CTA conversion analytics instrumentation (hero CTA + waitlist submit)
+- [ ] Add social proof blocks (logos/testimonials/trust badges) on landing page
+- [ ] Run Lighthouse and address issues below 90 in Performance/Accessibility/SEO
+
+---
+
 ## Completed Features
 
 | # | Feature | PR | Tests |
@@ -247,10 +265,10 @@
 | 41 | Phase 8.4 Deployment — OTP release, Dockerfile, fly.toml, CD pipeline | PR #36 | 2 tests |
 
 ### Test Totals
-- **686 Elixir tests** (0 failures)
+- **700 Elixir tests** (0 failures)
 - **212 @syncforge/core tests** (TypeScript)
 - **112 @syncforge/react tests** (TypeScript)
-- **Total: 1,010 tests**
+- **Total: 1,024 tests**
 
 ### Up Next
 - Phase 6 gap: Documentation (SDK guide, quick start, API reference, example apps)

@@ -11,11 +11,23 @@ import ConnectionStatus from "./connection_status.js";
  * Handles dark/light mode with system preference detection
  */
 const ThemeToggle = {
+  validThemes: new Set(["light", "dark", "system"]),
+
   mounted() {
-    this.applyTheme(this.el.dataset.theme);
+    this.mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+    // Restore persisted theme and sync with LiveView assign.
+    const storedTheme = this.normalizeTheme(localStorage.getItem("phx:theme"));
+    const assignedTheme = this.normalizeTheme(this.el.dataset.theme);
+    const themeToApply = storedTheme || assignedTheme;
+
+    this.applyTheme(themeToApply);
+
+    if (themeToApply !== assignedTheme) {
+      this.pushEvent("toggle_theme", { theme: themeToApply });
+    }
 
     // Listen for system theme changes
-    this.mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     this.handleSystemThemeChange = (e) => {
       if (this.el.dataset.theme === "system") {
         this.applySystemTheme(e.matches);
@@ -25,7 +37,7 @@ const ThemeToggle = {
   },
 
   updated() {
-    this.applyTheme(this.el.dataset.theme);
+    this.applyTheme(this.normalizeTheme(this.el.dataset.theme));
   },
 
   destroyed() {
@@ -34,12 +46,24 @@ const ThemeToggle = {
     }
   },
 
+  normalizeTheme(theme) {
+    return this.validThemes.has(theme) ? theme : "system";
+  },
+
   applyTheme(theme) {
-    if (theme === "system") {
+    const safeTheme = this.normalizeTheme(theme);
+
+    if (safeTheme === "system") {
+      localStorage.removeItem("phx:theme");
+    } else {
+      localStorage.setItem("phx:theme", safeTheme);
+    }
+
+    if (safeTheme === "system") {
       this.applySystemTheme(this.mediaQuery.matches);
     } else {
-      document.documentElement.setAttribute("data-theme", theme);
-      this.el.setAttribute("data-resolved-theme", theme);
+      document.documentElement.setAttribute("data-theme", safeTheme);
+      this.el.setAttribute("data-resolved-theme", safeTheme);
     }
   },
 

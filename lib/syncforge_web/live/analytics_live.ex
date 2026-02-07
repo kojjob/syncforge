@@ -51,8 +51,8 @@ defmodule SyncforgeWeb.AnalyticsLive do
   def render(assigns) do
     ~H"""
     <div class="mb-8">
-      <h1 class="text-2xl font-bold">Analytics</h1>
-      <p class="text-base-content/60 mt-1">Connection and usage analytics</p>
+      <h1 class="text-2xl font-bold text-foreground">Analytics</h1>
+      <p class="text-muted mt-1">Connection and usage analytics</p>
     </div>
 
     <%= if @current_org do %>
@@ -62,8 +62,11 @@ defmodule SyncforgeWeb.AnalyticsLive do
           phx-click="set_period"
           phx-value-period={p}
           class={[
-            "btn btn-sm",
-            if(@period == p, do: "btn-primary", else: "btn-outline")
+            "inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
+            if(@period == p,
+              do: "bg-primary text-primary-foreground hover:bg-primary-hover",
+              else: "border border-border text-foreground hover:bg-surface-alt"
+            )
           ]}
         >
           {p}
@@ -71,57 +74,51 @@ defmodule SyncforgeWeb.AnalyticsLive do
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div class="card bg-base-200 shadow-sm">
-          <div class="card-body">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-medium text-base-content/60">Total Connections</h3>
-              <span class="hero-signal size-5 text-base-content/40"></span>
-            </div>
-            <p class="text-3xl font-bold mt-1">{@stats.total_connections}</p>
-            <p class="text-xs text-base-content/50 mt-1">Join events in period</p>
+        <div class="rounded-xl border border-border bg-surface-alt shadow-sm p-6">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-medium text-muted">Total Connections</h3>
+            <span class="hero-signal size-5 text-muted-foreground"></span>
           </div>
+          <p class="text-3xl font-bold text-foreground mt-1">{@stats.total_connections}</p>
+          <p class="text-xs text-muted-foreground mt-1">Join events in period</p>
         </div>
-        <div class="card bg-base-200 shadow-sm">
-          <div class="card-body">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-medium text-base-content/60">Unique Users</h3>
-              <span class="hero-users size-5 text-base-content/40"></span>
-            </div>
-            <p class="text-3xl font-bold mt-1">{@stats.unique_users}</p>
-            <p class="text-xs text-base-content/50 mt-1">Distinct users connected</p>
+        <div class="rounded-xl border border-border bg-surface-alt shadow-sm p-6">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-medium text-muted">Unique Users</h3>
+            <span class="hero-users size-5 text-muted-foreground"></span>
           </div>
+          <p class="text-3xl font-bold text-foreground mt-1">{@stats.unique_users}</p>
+          <p class="text-xs text-muted-foreground mt-1">Distinct users connected</p>
         </div>
-        <div class="card bg-base-200 shadow-sm">
-          <div class="card-body">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-medium text-base-content/60">Active Rooms</h3>
-              <span class="hero-rectangle-group size-5 text-base-content/40"></span>
-            </div>
-            <p class="text-3xl font-bold mt-1">{@stats.active_rooms}</p>
-            <p class="text-xs text-base-content/50 mt-1">Rooms with activity</p>
+        <div class="rounded-xl border border-border bg-surface-alt shadow-sm p-6">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-medium text-muted">Active Rooms</h3>
+            <span class="hero-rectangle-group size-5 text-muted-foreground"></span>
           </div>
+          <p class="text-3xl font-bold text-foreground mt-1">{@stats.active_rooms}</p>
+          <p class="text-xs text-muted-foreground mt-1">Rooms with activity</p>
         </div>
       </div>
 
-      <div class="card bg-base-200 shadow-sm">
-        <div class="card-body">
-          <h2 class="card-title text-lg">Room Usage</h2>
+      <div class="rounded-xl border border-border bg-surface-alt shadow-sm">
+        <div class="p-6">
+          <h2 class="text-lg font-semibold text-foreground">Room Usage</h2>
           <%= if @breakdown == [] do %>
-            <p class="text-base-content/50 text-sm py-4">No room activity in this period.</p>
+            <p class="text-muted-foreground text-sm py-4">No room activity in this period.</p>
           <% else %>
-            <div class="overflow-x-auto">
-              <table class="table table-sm">
+            <div class="overflow-x-auto mt-4">
+              <table class="w-full text-sm text-left">
                 <thead>
-                  <tr>
-                    <th>Room</th>
-                    <th>Connections</th>
+                  <tr class="border-b border-border text-muted">
+                    <th class="pb-3 font-medium">Room</th>
+                    <th class="pb-3 font-medium">Connections</th>
                   </tr>
                 </thead>
                 <tbody>
                   <%= for {room_id, count} <- @breakdown do %>
-                    <tr>
-                      <td class="font-mono text-sm">{room_id}</td>
-                      <td>{count}</td>
+                    <tr class="border-b border-border last:border-0">
+                      <td class="py-3 font-mono text-sm text-foreground">{room_id}</td>
+                      <td class="py-3 text-foreground">{count}</td>
                     </tr>
                   <% end %>
                 </tbody>
@@ -131,11 +128,12 @@ defmodule SyncforgeWeb.AnalyticsLive do
         </div>
       </div>
     <% else %>
-      <div class="text-center py-12 text-base-content/50">
+      <div class="text-center py-12 text-muted-foreground">
         <span class="hero-building-office size-12 mx-auto mb-4 block"></span>
         <p class="text-lg font-medium">Create an organization first</p>
         <p class="text-sm mt-1">
-          Go to the <a href="/dashboard" class="link link-primary">Dashboard</a>
+          Go to the
+          <a href="/dashboard" class="text-primary hover:underline font-medium">Dashboard</a>
           to create an organization.
         </p>
       </div>

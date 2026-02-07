@@ -16,7 +16,13 @@ defmodule SyncforgeWeb.Plugs.SecurityHeadersTest do
       csp = Plug.Conn.get_resp_header(conn, "content-security-policy") |> List.first()
       assert csp =~ "default-src 'self'"
       assert csp =~ ~r/script-src 'self' 'nonce-[A-Za-z0-9+\/=]+'/
-      assert csp =~ "style-src 'self' 'unsafe-inline'"
+      assert csp =~ "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com"
+      assert csp =~ "font-src 'self' https://fonts.gstatic.com data:"
+      assert csp =~ "connect-src 'self'"
+      assert csp =~ "ws://www.example.com"
+      assert csp =~ "ws://www.example.com:80"
+      assert csp =~ "wss://www.example.com"
+      assert csp =~ "wss://www.example.com:80"
       assert csp =~ "frame-ancestors 'none'"
     end
 

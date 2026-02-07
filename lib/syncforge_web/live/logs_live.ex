@@ -71,40 +71,43 @@ defmodule SyncforgeWeb.LogsLive do
   def render(assigns) do
     ~H"""
     <div class="mb-8">
-      <h1 class="text-2xl font-bold">Logs</h1>
-      <p class="text-base-content/60 mt-1">Real-time connection event log</p>
+      <h1 class="text-2xl font-bold text-foreground">Logs</h1>
+      <p class="text-muted mt-1">Real-time connection event log</p>
     </div>
 
     <%= if @current_org do %>
-      <div class="card bg-base-200 shadow-sm">
-        <div class="card-body">
+      <div class="rounded-xl border border-border bg-surface-alt shadow-sm">
+        <div class="p-6">
           <div id="events-log" phx-update="stream">
             <div
               :for={{dom_id, event} <- @streams.events}
               id={dom_id}
-              class="flex items-center gap-4 py-2 border-b border-base-300 last:border-0"
+              class="flex items-center gap-4 py-2 border-b border-border last:border-0"
             >
               <span class={[
-                "badge badge-sm",
-                if(event.event_type == "join", do: "badge-success", else: "badge-warning")
+                "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                if(event.event_type == "join",
+                  do: "bg-success/10 text-success",
+                  else: "bg-warning/10 text-warning"
+                )
               ]}>
                 {event.event_type}
               </span>
-              <span class="text-sm">
+              <span class="text-sm text-foreground">
                 <%= if event.user do %>
                   {event.user.name || event.user.email}
                 <% else %>
-                  <span class="text-base-content/40">Anonymous</span>
+                  <span class="text-muted-foreground">Anonymous</span>
                 <% end %>
               </span>
-              <span class="text-sm text-base-content/50">
+              <span class="text-sm text-muted-foreground">
                 <%= if event.room do %>
                   {event.room.name}
                 <% else %>
-                  <span class="text-base-content/40">—</span>
+                  <span class="text-muted-foreground">&mdash;</span>
                 <% end %>
               </span>
-              <span class="text-xs text-base-content/40 ml-auto">
+              <span class="text-xs text-muted-foreground ml-auto">
                 {Calendar.strftime(event.inserted_at, "%Y-%m-%d %H:%M:%S")}
               </span>
             </div>
@@ -112,17 +115,18 @@ defmodule SyncforgeWeb.LogsLive do
         </div>
       </div>
 
-      <div :if={!@has_events} class="text-center py-12 text-base-content/50">
+      <div :if={!@has_events} class="text-center py-12 text-muted-foreground">
         <span class="hero-document-text size-12 mx-auto mb-4 block"></span>
         <p class="text-lg font-medium">No events yet</p>
         <p class="text-sm mt-1">Events will appear here as users connect to rooms.</p>
       </div>
     <% else %>
-      <div class="text-center py-12 text-base-content/50">
+      <div class="text-center py-12 text-muted-foreground">
         <span class="hero-building-office size-12 mx-auto mb-4 block"></span>
         <p class="text-lg font-medium">Create an organization first</p>
         <p class="text-sm mt-1">
-          Go to the <a href="/dashboard" class="link link-primary">Dashboard</a>
+          Go to the
+          <a href="/dashboard" class="text-primary hover:underline font-medium">Dashboard</a>
           to create an organization.
         </p>
       </div>

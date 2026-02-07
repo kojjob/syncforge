@@ -47,6 +47,10 @@ defmodule SyncforgeWeb.Router do
 
     # Keep home page at /home if needed
     get "/home", PageController, :home
+    get "/docs", PageController, :docs
+    get "/blog", PageController, :blog
+    get "/privacy", PageController, :privacy
+    get "/contact", PageController, :contact
   end
 
   # Browser session management (POST to set cookie, DELETE to clear)

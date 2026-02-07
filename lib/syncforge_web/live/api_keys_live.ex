@@ -125,8 +125,8 @@ defmodule SyncforgeWeb.ApiKeysLive do
     ~H"""
     <div>
       <div class="mb-8">
-        <h1 class="text-2xl font-bold">API Keys</h1>
-        <p class="text-base-content/60 mt-1">
+        <h1 class="text-2xl font-bold text-foreground">API Keys</h1>
+        <p class="text-muted mt-1">
           Manage API keys for your organization.
         </p>
       </div>
@@ -134,47 +134,58 @@ defmodule SyncforgeWeb.ApiKeysLive do
       <%= if @current_org do %>
         <%!-- Revealed Key Banner --%>
         <%= if @revealed_key do %>
-          <div class="alert alert-warning mb-6">
-            <.icon name="hero-exclamation-triangle" class="size-5" />
+          <div class="rounded-lg border border-warning/30 bg-warning/10 p-4 flex items-start gap-3 mb-6">
+            <.icon name="hero-exclamation-triangle" class="size-5 text-warning shrink-0 mt-0.5" />
             <div class="flex-1">
-              <p class="font-medium">Copy your API key now!</p>
-              <p class="text-sm mt-1">This key will not be shown again.</p>
-              <code class="block mt-2 bg-base-100 p-2 rounded text-sm break-all">
+              <p class="font-medium text-foreground">Copy your API key now!</p>
+              <p class="text-sm text-muted mt-1">This key will not be shown again.</p>
+              <code class="block mt-2 bg-surface rounded-lg p-2 text-sm text-foreground break-all">
                 {@revealed_key}
               </code>
             </div>
-            <button phx-click="dismiss_key" class="btn btn-sm btn-ghost">Dismiss</button>
+            <button
+              phx-click="dismiss_key"
+              class="p-1 rounded text-muted hover:text-foreground hover:bg-surface-alt transition-colors"
+            >
+              <.icon name="hero-x-mark" class="size-4" />
+            </button>
           </div>
         <% end %>
 
         <%!-- Create Key Form --%>
-        <div class="card bg-base-200 shadow-sm mb-6">
-          <div class="card-body">
-            <h2 class="card-title text-lg">Create API Key</h2>
+        <div class="rounded-xl border border-border bg-surface-alt shadow-sm mb-6">
+          <div class="p-6">
+            <h2 class="text-lg font-semibold text-foreground">Create API Key</h2>
             <.form
               for={%{}}
               id="create-api-key-form"
               phx-submit="create_key"
-              class="flex gap-3 mt-2 items-end"
+              class="flex gap-3 mt-3 items-end"
             >
-              <div class="flex-1">
-                <label class="label"><span class="label-text">Label</span></label>
+              <div class="flex-1 space-y-1">
+                <label class="block text-sm font-medium text-foreground">Label</label>
                 <input
                   type="text"
                   name="api_key[label]"
                   placeholder="e.g. Production, Staging"
-                  class="input input-bordered input-sm w-full"
+                  class="w-full rounded-lg border border-input-border bg-input px-3 py-1.5 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                   required
                 />
               </div>
-              <div>
-                <label class="label"><span class="label-text">Type</span></label>
-                <select name="api_key[type]" class="select select-bordered select-sm">
+              <div class="space-y-1">
+                <label class="block text-sm font-medium text-foreground">Type</label>
+                <select
+                  name="api_key[type]"
+                  class="rounded-lg border border-input-border bg-input px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                >
                   <option value="publishable">Publishable</option>
                   <option value="secret">Secret</option>
                 </select>
               </div>
-              <button type="submit" class="btn btn-primary btn-sm">
+              <button
+                type="submit"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary-hover transition-colors"
+              >
                 <.icon name="hero-plus" class="size-4" /> Create
               </button>
             </.form>
@@ -183,23 +194,29 @@ defmodule SyncforgeWeb.ApiKeysLive do
 
         <%!-- Filter Toggle --%>
         <div class="flex justify-between items-center mb-4">
-          <span class="text-sm text-base-content/60">
+          <span class="text-sm text-muted">
             {length(@api_keys)} key{if length(@api_keys) != 1, do: "s", else: ""}
           </span>
           <label class="flex items-center gap-2 cursor-pointer">
-            <span class="text-sm">Show revoked</span>
-            <input
-              type="checkbox"
-              class="toggle toggle-sm"
-              checked={@show_revoked}
-              phx-click="toggle_revoked"
-            />
+            <span class="text-sm text-foreground">Show revoked</span>
+            <div class="relative inline-flex">
+              <input
+                type="checkbox"
+                class="peer sr-only"
+                checked={@show_revoked}
+                phx-click="toggle_revoked"
+              />
+              <div class="w-9 h-5 rounded-full bg-surface-strong peer-checked:bg-primary transition-colors cursor-pointer">
+              </div>
+              <div class="absolute left-0.5 top-0.5 w-4 h-4 rounded-full bg-white transition-transform peer-checked:translate-x-4">
+              </div>
+            </div>
           </label>
         </div>
 
         <%!-- Key List --%>
         <%= if @api_keys == [] do %>
-          <div class="text-center py-12 text-base-content/50">
+          <div class="text-center py-12 text-muted-foreground">
             <.icon name="hero-key" class="size-12 mx-auto mb-3 opacity-30" />
             <p>No API keys yet</p>
             <p class="text-sm mt-1">Create your first key above to get started.</p>
@@ -207,21 +224,23 @@ defmodule SyncforgeWeb.ApiKeysLive do
         <% else %>
           <div class="space-y-3">
             <%= for key <- @api_keys do %>
-              <div class={"card bg-base-200 shadow-sm #{if key.status == "revoked", do: "opacity-60"}"}>
-                <div class="card-body p-4">
+              <div class={"rounded-xl border border-border bg-surface-alt shadow-sm #{if key.status == "revoked", do: "opacity-60"}"}>
+                <div class="p-4">
                   <div class="flex items-center justify-between">
                     <div>
                       <div class="flex items-center gap-2">
-                        <span class="font-medium">{key.label}</span>
-                        <span class={"badge badge-sm #{if key.type == "secret", do: "badge-warning", else: "badge-info"}"}>
+                        <span class="font-medium text-foreground">{key.label}</span>
+                        <span class={"inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium #{if key.type == "secret", do: "bg-warning/10 text-warning", else: "bg-info/10 text-info"}"}>
                           {key.type}
                         </span>
                         <%= if key.status == "revoked" do %>
-                          <span class="badge badge-sm badge-error">Revoked</span>
+                          <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-error/10 text-error">
+                            Revoked
+                          </span>
                         <% end %>
                       </div>
-                      <p class="text-xs text-base-content/50 mt-1">
-                        <code>{key.key_prefix}•••</code>
+                      <p class="text-xs text-muted-foreground mt-1">
+                        <code>{key.key_prefix}&bull;&bull;&bull;</code>
                         <span class="ml-2">
                           Created {Calendar.strftime(key.inserted_at, "%b %d, %Y")}
                         </span>
@@ -232,7 +251,7 @@ defmodule SyncforgeWeb.ApiKeysLive do
                         phx-click="revoke_key"
                         phx-value-id={key.id}
                         data-confirm="Are you sure you want to revoke this API key? This cannot be undone."
-                        class="btn btn-sm btn-error btn-outline"
+                        class="inline-flex items-center rounded-lg border border-error text-error px-3 py-1.5 text-xs font-semibold hover:bg-error/10 transition-colors"
                       >
                         Revoke
                       </button>
@@ -245,13 +264,15 @@ defmodule SyncforgeWeb.ApiKeysLive do
         <% end %>
       <% else %>
         <%!-- No org message --%>
-        <div class="card bg-base-200 shadow-sm max-w-lg">
-          <div class="card-body text-center">
+        <div class="rounded-xl border border-border bg-surface-alt shadow-sm max-w-lg">
+          <div class="p-6 text-center">
             <.icon name="hero-building-office" class="size-12 mx-auto mb-3 opacity-30" />
-            <p class="font-medium">No organization selected</p>
-            <p class="text-sm text-base-content/60 mt-1">
+            <p class="font-medium text-foreground">No organization selected</p>
+            <p class="text-sm text-muted mt-1">
               Create an organization from the
-              <.link navigate={~p"/dashboard"} class="link link-primary">dashboard</.link>
+              <.link navigate={~p"/dashboard"} class="text-primary hover:underline font-medium">
+                dashboard
+              </.link>
               to manage API keys.
             </p>
           </div>

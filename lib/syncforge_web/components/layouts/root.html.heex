@@ -4,9 +4,31 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
+    <meta
+      name="description"
+      content={
+        assigns[:meta_description] ||
+          "SyncForge helps developers add real-time collaboration features such as presence, cursors, comments, and notifications."
+      }
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={assigns[:page_title] || "SyncForge"} />
+    <meta
+      property="og:description"
+      content={
+        assigns[:meta_description] ||
+          "SyncForge helps developers add real-time collaboration features such as presence, cursors, comments, and notifications."
+      }
+    />
     <.live_title default="Syncforge" suffix=" · Phoenix Framework">
       {assigns[:page_title]}
     </.live_title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script
       defer
