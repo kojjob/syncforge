@@ -52,35 +52,35 @@ defmodule SyncforgeWeb.UserRegisterLive do
     ~H"""
     <div class="mx-auto max-w-sm mt-20">
       <div class="text-center mb-8">
-        <h1 class="text-2xl font-bold">Create your account</h1>
-        <p class="text-sm text-base-content/60 mt-2">
+        <h1 class="text-2xl font-bold text-foreground">Create your account</h1>
+        <p class="text-sm text-muted mt-2">
           Already have an account?
-          <.link navigate={~p"/login"} class="link link-primary font-semibold">
+          <.link navigate={~p"/login"} class="text-primary hover:underline font-semibold">
             Sign in
           </.link>
         </p>
       </div>
 
-      <div class="card bg-base-200 shadow-sm">
-        <div class="card-body">
+      <div class="rounded-xl border border-border bg-surface-alt shadow-sm">
+        <div class="p-6">
           <.form for={@form} id="user-form" phx-change="validate" phx-submit="save" class="space-y-4">
-            <div class="form-control">
-              <label class="label" for="user_name">
-                <span class="label-text">Name</span>
+            <div class="space-y-1">
+              <label class="block text-sm font-medium text-foreground" for="user_name">
+                Name
               </label>
               <.input field={@form[:name]} type="text" placeholder="Your name" required />
             </div>
 
-            <div class="form-control">
-              <label class="label" for="user_email">
-                <span class="label-text">Email</span>
+            <div class="space-y-1">
+              <label class="block text-sm font-medium text-foreground" for="user_email">
+                Email
               </label>
               <.input field={@form[:email]} type="email" placeholder="you@example.com" required />
             </div>
 
-            <div class="form-control">
-              <label class="label" for="user_password">
-                <span class="label-text">Password</span>
+            <div class="space-y-1">
+              <label class="block text-sm font-medium text-foreground" for="user_password">
+                Password
               </label>
               <.input
                 field={@form[:password]}
@@ -92,7 +92,7 @@ defmodule SyncforgeWeb.UserRegisterLive do
 
             <button
               type="submit"
-              class="btn btn-primary w-full"
+              class="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover transition-colors"
               phx-disable-with="Creating account..."
             >
               Create account

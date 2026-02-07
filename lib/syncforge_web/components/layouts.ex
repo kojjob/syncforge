@@ -21,26 +21,41 @@ defmodule SyncforgeWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="navbar px-4 sm:px-6 lg:px-8">
+    <header class="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8 border-b border-border">
       <div class="flex-1">
-        <a href="/" class="flex-1 flex w-fit items-center gap-2">
+        <a href="/" class="flex w-fit items-center gap-2">
           <img src={~p"/images/logo.svg"} width="36" />
-          <span class="text-sm font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
+          <span class="text-sm font-semibold text-foreground">
+            v{Application.spec(:phoenix, :vsn)}
+          </span>
         </a>
       </div>
       <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4 items-center">
+        <ul class="flex px-1 space-x-4 items-center">
           <li>
-            <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
+            <a
+              href="https://phoenixframework.org/"
+              class="text-sm font-medium text-muted hover:text-foreground transition-colors"
+            >
+              Website
+            </a>
           </li>
           <li>
-            <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
+            <a
+              href="https://github.com/phoenixframework/phoenix"
+              class="text-sm font-medium text-muted hover:text-foreground transition-colors"
+            >
+              GitHub
+            </a>
           </li>
           <li>
             <.theme_toggle />
           </li>
           <li>
-            <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
+            <a
+              href="https://hexdocs.pm/phoenix/overview.html"
+              class="inline-flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover transition-colors"
+            >
               Get Started <span aria-hidden="true">&rarr;</span>
             </a>
           </li>
@@ -69,105 +84,142 @@ defmodule SyncforgeWeb.Layouts do
 
   def dashboard(assigns) do
     ~H"""
-    <div class="flex h-screen bg-base-100">
+    <div class="flex h-screen bg-surface">
       <%!-- Sidebar --%>
-      <aside class="w-64 bg-base-200 border-r border-base-300 flex flex-col">
-        <%!-- Logo --%>
-        <div class="p-4 border-b border-base-300">
-          <a href="/" class="flex items-center gap-2">
-            <img src={~p"/images/logo.svg"} width="28" />
-            <span class="font-bold text-lg">SyncForge</span>
-          </a>
-        </div>
+      <aside class="w-64 border-r border-border flex flex-col bg-surface sticky top-0 h-screen">
+        <div class="p-6 flex flex-col gap-8 h-full">
+          <%!-- Logo --%>
+          <div class="flex items-center gap-3">
+            <div class="bg-primary rounded-lg p-2 text-primary-foreground flex items-center justify-center">
+              <.icon name="hero-arrow-path" class="size-5" />
+            </div>
+            <div class="flex flex-col">
+              <h1 class="text-foreground text-lg font-bold leading-tight">SyncForge</h1>
+              <p class="text-muted-foreground text-xs font-medium">Dev Infrastructure</p>
+            </div>
+          </div>
 
-        <%!-- Org Picker --%>
-        <div class="p-3 border-b border-base-300">
-          <%= if @organizations != [] do %>
-            <select
-              id="org-picker"
-              phx-change="switch_org"
-              name="org_id"
-              class="select select-bordered select-sm w-full"
+          <%!-- Nav Links --%>
+          <nav class="flex flex-col gap-1 flex-1">
+            <.link
+              navigate={~p"/dashboard"}
+              class={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm #{if @active_nav == :overview, do: "bg-primary/10 text-primary font-semibold", else: "text-muted font-medium hover:bg-surface-alt transition-colors"}"}
             >
-              <%= for org <- @organizations do %>
-                <option value={org.id} selected={@current_org && org.id == @current_org.id}>
-                  {org.name}
-                </option>
-              <% end %>
-            </select>
-          <% else %>
-            <p class="text-xs text-base-content/50 px-1">No organizations yet</p>
-          <% end %>
-        </div>
+              <.icon name="hero-squares-2x2" class="size-5" /> Overview
+            </.link>
+            <.link
+              navigate={~p"/dashboard/rooms"}
+              class={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm #{if @active_nav == :rooms, do: "bg-primary/10 text-primary font-semibold", else: "text-muted font-medium hover:bg-surface-alt transition-colors"}"}
+            >
+              <.icon name="hero-rectangle-group" class="size-5" /> Rooms
+            </.link>
+            <.link
+              navigate={~p"/dashboard/analytics"}
+              class={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm #{if @active_nav == :analytics, do: "bg-primary/10 text-primary font-semibold", else: "text-muted font-medium hover:bg-surface-alt transition-colors"}"}
+            >
+              <.icon name="hero-chart-bar" class="size-5" /> Metrics
+            </.link>
+            <.link
+              navigate={~p"/dashboard/api-keys"}
+              class={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm #{if @active_nav == :api_keys, do: "bg-primary/10 text-primary font-semibold", else: "text-muted font-medium hover:bg-surface-alt transition-colors"}"}
+            >
+              <.icon name="hero-key" class="size-5" /> API Keys
+            </.link>
+            <.link
+              navigate={~p"/dashboard/logs"}
+              class={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm #{if @active_nav == :logs, do: "bg-primary/10 text-primary font-semibold", else: "text-muted font-medium hover:bg-surface-alt transition-colors"}"}
+            >
+              <.icon name="hero-document-text" class="size-5" /> Logs
+            </.link>
+            <.link
+              navigate={~p"/dashboard/billing"}
+              class={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm mt-auto #{if @active_nav == :billing, do: "bg-primary/10 text-primary font-semibold", else: "text-muted font-medium hover:bg-surface-alt transition-colors"}"}
+            >
+              <.icon name="hero-credit-card" class="size-5" /> Billing
+            </.link>
+          </nav>
 
-        <%!-- Nav Links --%>
-        <nav class="flex-1 p-3 space-y-1">
-          <.link
-            navigate={~p"/dashboard"}
-            class={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors #{if @active_nav == :overview, do: "bg-primary text-primary-content", else: "hover:bg-base-300"}"}
-          >
-            <.icon name="hero-home" class="size-5" /> Overview
-          </.link>
-          <.link
-            navigate={~p"/dashboard/rooms"}
-            class={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors #{if @active_nav == :rooms, do: "bg-primary text-primary-content", else: "hover:bg-base-300"}"}
-          >
-            <.icon name="hero-rectangle-group" class="size-5" /> Rooms
-          </.link>
-          <.link
-            navigate={~p"/dashboard/api-keys"}
-            class={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors #{if @active_nav == :api_keys, do: "bg-primary text-primary-content", else: "hover:bg-base-300"}"}
-          >
-            <.icon name="hero-key" class="size-5" /> API Keys
-          </.link>
-          <.link
-            navigate={~p"/dashboard/analytics"}
-            class={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors #{if @active_nav == :analytics, do: "bg-primary text-primary-content", else: "hover:bg-base-300"}"}
-          >
-            <.icon name="hero-chart-bar" class="size-5" /> Analytics
-          </.link>
-          <.link
-            navigate={~p"/dashboard/logs"}
-            class={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors #{if @active_nav == :logs, do: "bg-primary text-primary-content", else: "hover:bg-base-300"}"}
-          >
-            <.icon name="hero-document-text" class="size-5" /> Logs
-          </.link>
-          <.link
-            navigate={~p"/dashboard/billing"}
-            class={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors #{if @active_nav == :billing, do: "bg-primary text-primary-content", else: "hover:bg-base-300"}"}
-          >
-            <.icon name="hero-credit-card" class="size-5" /> Billing
-          </.link>
-        </nav>
-
-        <%!-- User section --%>
-        <div class="p-3 border-t border-base-300">
-          <div class="flex items-center gap-3 px-3 py-2">
-            <div class="avatar placeholder">
-              <div class="bg-neutral text-neutral-content rounded-full w-8">
-                <span class="text-xs">
+          <%!-- User Section --%>
+          <div class="border-t border-border pt-4">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center justify-center bg-primary/10 text-primary rounded-full w-8 h-8 shrink-0">
+                <span class="text-xs font-semibold">
                   {String.first(@current_user.name || @current_user.email)}
                 </span>
               </div>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium truncate">{@current_user.name}</p>
-              <p class="text-xs text-base-content/50 truncate">{@current_user.email}</p>
+              <div class="flex flex-col overflow-hidden">
+                <p class="text-sm font-bold text-foreground truncate">
+                  {@current_user.name || @current_user.email}
+                </p>
+                <p class="text-xs text-muted-foreground truncate">
+                  {if @current_org,
+                    do: "#{String.capitalize(to_string(@current_org.plan_type || "free"))} Plan",
+                    else: "Free Plan"}
+                </p>
+              </div>
             </div>
           </div>
-          <.link
-            href={~p"/session"}
-            method="delete"
-            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-base-300 transition-colors w-full mt-1"
-          >
-            <.icon name="hero-arrow-right-on-rectangle" class="size-5" /> Log out
-          </.link>
         </div>
       </aside>
 
       <%!-- Main Content --%>
-      <main class="flex-1 overflow-auto">
-        <div class="p-6 lg:p-8">
+      <main class="flex-1 flex flex-col overflow-auto">
+        <%!-- Top Bar --%>
+        <header class="flex items-center justify-between border-b border-border px-8 py-4 bg-surface shrink-0">
+          <div class="flex items-center gap-6">
+            <%!-- Org/Project Selector --%>
+            <div class="flex items-center gap-3">
+              <.icon name="hero-folder" class="size-5 text-primary" />
+              <%= if @organizations != [] do %>
+                <select
+                  id="org-picker"
+                  phx-change="switch_org"
+                  name="org_id"
+                  class="bg-transparent border-none text-foreground text-base font-bold tracking-tight focus:ring-0 p-0 pr-8 cursor-pointer"
+                >
+                  <%= for org <- @organizations do %>
+                    <option value={org.id} selected={@current_org && org.id == @current_org.id}>
+                      {org.name}
+                    </option>
+                  <% end %>
+                </select>
+              <% else %>
+                <span class="text-base font-bold text-muted-foreground">No projects</span>
+              <% end %>
+            </div>
+            <div class="h-6 w-px bg-border"></div>
+            <%!-- Search --%>
+            <div class="relative flex items-center">
+              <.icon
+                name="hero-magnifying-glass"
+                class="absolute left-3 size-4 text-muted-foreground"
+              />
+              <input
+                class="w-64 h-9 bg-input border border-input-border rounded-lg pl-9 pr-4 text-sm text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none"
+                placeholder="Search rooms or metrics"
+              />
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <button class="p-2 rounded-lg bg-input text-muted hover:bg-surface-strong hover:text-foreground transition-colors">
+              <.icon name="hero-bell" class="size-5" />
+            </button>
+            <button class="p-2 rounded-lg bg-input text-muted hover:bg-surface-strong hover:text-foreground transition-colors">
+              <.icon name="hero-question-mark-circle" class="size-5" />
+            </button>
+            <.link
+              href={~p"/session"}
+              method="delete"
+              class="p-2 rounded-lg bg-input text-muted hover:bg-surface-strong hover:text-foreground transition-colors"
+              title="Log out"
+            >
+              <.icon name="hero-arrow-right-on-rectangle" class="size-5" />
+            </.link>
+          </div>
+        </header>
+
+        <%!-- Page Content --%>
+        <div class="p-8 max-w-7xl w-full mx-auto flex-1">
           <.flash_group flash={@flash} />
           {@inner_content}
         </div>
@@ -222,8 +274,8 @@ defmodule SyncforgeWeb.Layouts do
   """
   def theme_toggle(assigns) do
     ~H"""
-    <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
-      <div class="absolute w-1/3 h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=light]_&]:left-1/3 [[data-theme=dark]_&]:left-2/3 transition-[left]" />
+    <div class="relative flex flex-row items-center border-2 border-border-strong bg-surface-strong rounded-full">
+      <div class="absolute w-1/3 h-full rounded-full border border-border bg-surface brightness-200 left-0 [[data-theme=light]_&]:left-1/3 [[data-theme=dark]_&]:left-2/3 transition-[left]" />
 
       <button
         class="flex p-2 cursor-pointer w-1/3"

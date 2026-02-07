@@ -40,12 +40,14 @@ defmodule SyncforgeWeb.Plugs.SecurityHeaders do
 
   defp build_csp(nonce, conn) do
     host = conn.host || "localhost"
+    port = conn.port || 443
 
     [
       "default-src 'self'",
       "script-src 'self' 'nonce-#{nonce}'",
-      "style-src 'self' 'unsafe-inline'",
-      "connect-src 'self' wss://#{host} https://api.stripe.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com data:",
+      "connect-src 'self' ws://#{host} ws://#{host}:#{port} wss://#{host} wss://#{host}:#{port} https://api.stripe.com",
       "frame-src https://js.stripe.com https://hooks.stripe.com",
       "frame-ancestors 'none'"
     ]

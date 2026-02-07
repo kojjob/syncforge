@@ -16,7 +16,7 @@ defmodule SyncforgeWeb.DashboardLiveTest do
       {:ok, _lv, html} = live(conn, ~p"/dashboard")
 
       assert html =~ "Dashboard"
-      assert html =~ "Welcome, Alice!"
+      assert html =~ "Project Overview"
     end
 
     test "shows flash error when redirected from protected page", %{conn: conn} do
@@ -55,9 +55,9 @@ defmodule SyncforgeWeb.DashboardLiveTest do
 
       {:ok, _lv, html} = live(conn, ~p"/dashboard")
 
-      assert html =~ "Rooms"
-      assert html =~ "Members"
-      assert html =~ "API Keys"
+      assert html =~ "Total Rooms"
+      assert html =~ "Team Members"
+      assert html =~ "Active Connections"
     end
 
     test "shows org picker for users with multiple orgs", %{conn: conn} do

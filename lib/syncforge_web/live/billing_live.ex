@@ -66,18 +66,18 @@ defmodule SyncforgeWeb.BillingLive do
   def render(assigns) do
     ~H"""
     <div class="mb-8">
-      <h1 class="text-2xl font-bold">Billing</h1>
-      <p class="text-base-content/60 mt-1">Manage your subscription and plan limits</p>
+      <h1 class="text-2xl font-bold text-foreground">Billing</h1>
+      <p class="text-muted mt-1">Manage your subscription and plan limits</p>
     </div>
 
     <%= if @current_org do %>
       <%!-- Status Alert --%>
       <%= if @subscription_status in ["past_due", "canceled", "unpaid"] do %>
-        <div class="alert alert-warning mb-6">
-          <.icon name="hero-exclamation-triangle" class="size-5" />
+        <div class="rounded-lg border border-warning/30 bg-warning/10 p-4 flex items-start gap-3 mb-6">
+          <.icon name="hero-exclamation-triangle" class="size-5 text-warning shrink-0 mt-0.5" />
           <div>
-            <p class="font-medium">Subscription status: {@subscription_status}</p>
-            <p class="text-sm">
+            <p class="font-medium text-foreground">Subscription status: {@subscription_status}</p>
+            <p class="text-sm text-muted">
               <%= if @subscription_status == "past_due" do %>
                 Your payment is overdue. Please update your payment method to avoid service interruption.
               <% else %>
@@ -90,31 +90,37 @@ defmodule SyncforgeWeb.BillingLive do
 
       <%!-- Plan Card --%>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div class="card bg-base-200 shadow-sm">
-          <div class="card-body">
-            <h2 class="card-title text-lg">Current Plan</h2>
+        <div class="rounded-xl border border-border bg-surface-alt shadow-sm">
+          <div class="p-6">
+            <h2 class="text-lg font-semibold text-foreground">Current Plan</h2>
             <%= if @plan_type do %>
               <div class="flex items-center gap-3 mt-2">
-                <span class="text-3xl font-bold capitalize">{@plan_type}</span>
-                <span class={"badge badge-sm #{status_badge_class(@subscription_status)}"}>
+                <span class="text-3xl font-bold text-foreground capitalize">{@plan_type}</span>
+                <span class={"inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium #{status_badge_class(@subscription_status)}"}>
                   {@subscription_status}
                 </span>
               </div>
               <%= if @current_period_end do %>
-                <p class="text-sm text-base-content/60 mt-2">
+                <p class="text-sm text-muted mt-2">
                   Current period ends: {Calendar.strftime(@current_period_end, "%B %d, %Y")}
                 </p>
               <% end %>
             <% else %>
-              <p class="text-base-content/60 mt-2">No plan configured</p>
+              <p class="text-muted mt-2">No plan configured</p>
             <% end %>
-            <div class="card-actions mt-4">
+            <div class="flex gap-3 mt-4">
               <%= if @has_stripe_customer do %>
-                <button class="btn btn-sm btn-outline" phx-click="manage_subscription">
+                <button
+                  class="inline-flex items-center rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-surface-alt transition-colors"
+                  phx-click="manage_subscription"
+                >
                   Manage Subscription
                 </button>
               <% end %>
-              <button class="btn btn-sm btn-primary" phx-click="upgrade">
+              <button
+                class="inline-flex items-center rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary-hover transition-colors"
+                phx-click="upgrade"
+              >
                 Upgrade
               </button>
             </div>
@@ -122,33 +128,35 @@ defmodule SyncforgeWeb.BillingLive do
         </div>
 
         <%!-- Usage Card --%>
-        <div class="card bg-base-200 shadow-sm">
-          <div class="card-body">
-            <h2 class="card-title text-lg">Usage</h2>
-            <div class="space-y-4 mt-2">
+        <div class="rounded-xl border border-border bg-surface-alt shadow-sm">
+          <div class="p-6">
+            <h2 class="text-lg font-semibold text-foreground">Usage</h2>
+            <div class="space-y-4 mt-3">
               <div>
                 <div class="flex justify-between text-sm mb-1">
-                  <span>Rooms</span>
-                  <span>{@room_count} / {@max_rooms}</span>
+                  <span class="text-foreground">Rooms</span>
+                  <span class="text-muted">{@room_count} / {@max_rooms}</span>
                 </div>
-                <progress
-                  class={"progress #{if @room_count >= @max_rooms, do: "progress-error", else: "progress-primary"}"}
-                  value={@room_count}
-                  max={@max_rooms}
-                >
-                </progress>
+                <div class="w-full h-2 rounded-full bg-surface-strong overflow-hidden">
+                  <div
+                    class={"h-full rounded-full transition-all #{if @room_count >= @max_rooms, do: "bg-error", else: "bg-primary"}"}
+                    style={"width: #{min(100, if(@max_rooms > 0, do: @room_count / @max_rooms * 100, else: 0))}%"}
+                  >
+                  </div>
+                </div>
               </div>
               <div>
                 <div class="flex justify-between text-sm mb-1">
-                  <span>Monthly Active Users</span>
-                  <span>{@mau_count} / {@max_mau}</span>
+                  <span class="text-foreground">Monthly Active Users</span>
+                  <span class="text-muted">{@mau_count} / {@max_mau}</span>
                 </div>
-                <progress
-                  class={"progress #{if @mau_count >= @max_mau, do: "progress-error", else: "progress-primary"}"}
-                  value={@mau_count}
-                  max={@max_mau}
-                >
-                </progress>
+                <div class="w-full h-2 rounded-full bg-surface-strong overflow-hidden">
+                  <div
+                    class={"h-full rounded-full transition-all #{if @mau_count >= @max_mau, do: "bg-error", else: "bg-primary"}"}
+                    style={"width: #{min(100, if(@max_mau > 0, do: @mau_count / @max_mau * 100, else: 0))}%"}
+                  >
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -156,18 +164,18 @@ defmodule SyncforgeWeb.BillingLive do
       </div>
 
       <%!-- Features --%>
-      <div class="card bg-base-200 shadow-sm">
-        <div class="card-body">
-          <h2 class="card-title text-lg">Features</h2>
+      <div class="rounded-xl border border-border bg-surface-alt shadow-sm">
+        <div class="p-6">
+          <h2 class="text-lg font-semibold text-foreground">Features</h2>
           <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
             <%= for {feature, enabled} <- @features do %>
               <div class="flex items-center gap-2">
                 <%= if enabled do %>
                   <.icon name="hero-check-circle" class="size-5 text-success" />
                 <% else %>
-                  <.icon name="hero-x-circle" class="size-5 text-base-content/30" />
+                  <.icon name="hero-x-circle" class="size-5 text-muted-foreground" />
                 <% end %>
-                <span class={"text-sm #{unless enabled, do: "text-base-content/40"}"}>
+                <span class={"text-sm #{unless enabled, do: "text-muted-foreground"}"}>
                   {feature_label(feature)}
                 </span>
               </div>
@@ -176,11 +184,12 @@ defmodule SyncforgeWeb.BillingLive do
         </div>
       </div>
     <% else %>
-      <div class="text-center py-12 text-base-content/50">
+      <div class="text-center py-12 text-muted-foreground">
         <span class="hero-building-office size-12 mx-auto mb-4 block"></span>
         <p class="text-lg font-medium">Create an organization first</p>
         <p class="text-sm mt-1">
-          Go to the <a href="/dashboard" class="link link-primary">Dashboard</a>
+          Go to the
+          <a href="/dashboard" class="text-primary hover:underline font-medium">Dashboard</a>
           to create an organization.
         </p>
       </div>
@@ -243,11 +252,11 @@ defmodule SyncforgeWeb.BillingLive do
 
   defp billing_period_start(%{current_period_start: start}), do: start
 
-  defp status_badge_class("active"), do: "badge-success"
-  defp status_badge_class("trialing"), do: "badge-info"
-  defp status_badge_class("past_due"), do: "badge-warning"
-  defp status_badge_class("canceled"), do: "badge-error"
-  defp status_badge_class(_), do: "badge-ghost"
+  defp status_badge_class("active"), do: "bg-success/10 text-success"
+  defp status_badge_class("trialing"), do: "bg-info/10 text-info"
+  defp status_badge_class("past_due"), do: "bg-warning/10 text-warning"
+  defp status_badge_class("canceled"), do: "bg-error/10 text-error"
+  defp status_badge_class(_), do: "bg-surface-strong text-muted"
 
   defp feature_label(:presence), do: "Presence"
   defp feature_label(:cursors), do: "Cursors"
